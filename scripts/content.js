@@ -40,10 +40,9 @@ function addSubwayVideo(videoElement) {
 
         try {
             isFullscreen = document.fullscreenElement !== null;
-            // Keep the additional checks for specific player implementations
             if (!isFullscreen) {
-                const playerContainers = document.querySelectorAll('.kWidgetIframeContainer, .otherPlayerClass');
-                playerContainers.forEach(container => {
+                const jwPlayerContainers = document.querySelectorAll('.jwplayer.jw-state-idle, .jwplayer.jw-state-playing, .jwplayer.jw-state-paused');
+                jwPlayerContainers.forEach(container => {
                     const rect = container.getBoundingClientRect();
                     const viewportArea = window.innerWidth * window.innerHeight;
                     const containerArea = rect.width * rect.height;
@@ -62,32 +61,48 @@ function addSubwayVideo(videoElement) {
             flexContainer.style.flexDirection = 'row';
             flexContainer.style.gap = '0';
             flexContainer.style.alignItems = 'center';
-            flexContainer.style.justifyContent = 'flex-end';
+            flexContainer.style.justifyContent = 'flex-start';
             flexContainer.style.width = '100%';
             flexContainer.style.height = '100vh';
-            flexContainer.style.position = isInIframe ? 'absolute' : 'fixed';
+            flexContainer.style.position = 'fixed';
             flexContainer.style.top = '0';
             flexContainer.style.left = '0';
-            flexContainer.style.backgroundColor = isInIframe ? 'transparent' : '#000';
-            flexContainer.style.zIndex = '9999999';
+            flexContainer.style.backgroundColor = 'transparent';
+            flexContainer.style.zIndex = '1';
 
-            // Main video setup
+            // Main video setup - make it the dominant element
             videoElement.style.width = '75%';
             videoElement.style.height = '100%';
             videoElement.style.maxHeight = '100vh';
             videoElement.style.objectFit = 'contain';
+            videoElement.style.position = 'relative';
+            videoElement.style.zIndex = '2';
             videoElement.style.order = '1';
-            videoElement.controls = true; // Enable native controls
 
-            // Subway video setup
+            // Subway video setup - make it secondary
             subwayContainer.style.width = '25%';
             subwayContainer.style.height = '100%';
+            subwayContainer.style.position = 'relative';
+            subwayContainer.style.zIndex = '1';
             subwayContainer.style.order = '2';
             subwayContainer.style.display = 'block';
 
             subwayVideo.style.width = '100%';
             subwayVideo.style.height = '100%';
             subwayVideo.style.objectFit = 'cover';
+
+            // For JWPlayer, ensure the player container remains visible
+            const jwPlayerContainer = videoElement.closest('.jwplayer');
+            if (jwPlayerContainer) {
+                jwPlayerContainer.style.width = '100%';
+                jwPlayerContainer.style.height = '100vh';
+                jwPlayerContainer.style.display = 'block';
+                // Ensure controls remain visible
+                const controls = jwPlayerContainer.querySelector('.jw-controls');
+                if (controls) {
+                    controls.style.zIndex = '3';
+                }
+            }
         } else {
             // Non-fullscreen styles
             flexContainer.style.display = 'block';
