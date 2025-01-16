@@ -39,11 +39,9 @@ function addSubwayVideo(videoElement) {
         let isFullscreen = false;
 
         try {
-            // Check standard fullscreen API
             isFullscreen = document.fullscreenElement !== null;
-
+            // Keep the additional checks for specific player implementations
             if (!isFullscreen) {
-                // Additional checks for specific player implementations
                 const playerContainers = document.querySelectorAll('.kWidgetIframeContainer, .otherPlayerClass');
                 playerContainers.forEach(container => {
                     const rect = container.getBoundingClientRect();
@@ -59,49 +57,39 @@ function addSubwayVideo(videoElement) {
         }
 
         if (isFullscreen) {
+            // Basic container setup
             flexContainer.style.display = 'flex';
             flexContainer.style.flexDirection = 'row';
             flexContainer.style.gap = '0';
-            flexContainer.style.alignItems = 'stretch';
+            flexContainer.style.alignItems = 'center';
             flexContainer.style.justifyContent = 'flex-end';
+            flexContainer.style.width = '100%';
+            flexContainer.style.height = '100vh';
+            flexContainer.style.position = isInIframe ? 'absolute' : 'fixed';
+            flexContainer.style.top = '0';
+            flexContainer.style.left = '0';
+            flexContainer.style.backgroundColor = isInIframe ? 'transparent' : '#000';
             flexContainer.style.zIndex = '9999999';
 
-            if (isInIframe) {
-                flexContainer.style.position = 'absolute';
-                flexContainer.style.width = '100%';
-                flexContainer.style.height = '100%';
-                flexContainer.style.top = '0';
-                flexContainer.style.left = '0';
-                flexContainer.style.backgroundColor = 'transparent';
-            } else {
-                flexContainer.style.position = 'fixed';
-                flexContainer.style.width = '100%';
-                flexContainer.style.height = '100vh';
-                flexContainer.style.top = '0';
-                flexContainer.style.left = '0';
-                flexContainer.style.backgroundColor = '#000';
-            }
-
-            videoElement.style.flex = '0 0 75%';
-            videoElement.style.height = '100%';
+            // Main video setup
             videoElement.style.width = '75%';
+            videoElement.style.height = '100%';
             videoElement.style.maxHeight = '100vh';
-            videoElement.style.maxWidth = 'none';
-            videoElement.style.margin = '0';
+            videoElement.style.objectFit = 'contain';
             videoElement.style.order = '1';
+            videoElement.controls = true; // Enable native controls
 
-            subwayContainer.style.flex = '0 0 25%';
-            subwayContainer.style.height = '100%';
+            // Subway video setup
             subwayContainer.style.width = '25%';
-            subwayContainer.style.position = 'static';
-            subwayContainer.style.margin = '0';
-            subwayContainer.style.display = 'block';
+            subwayContainer.style.height = '100%';
             subwayContainer.style.order = '2';
+            subwayContainer.style.display = 'block';
 
             subwayVideo.style.width = '100%';
             subwayVideo.style.height = '100%';
             subwayVideo.style.objectFit = 'cover';
         } else {
+            // Non-fullscreen styles
             flexContainer.style.display = 'block';
             flexContainer.style.width = 'auto';
             flexContainer.style.height = 'auto';
@@ -112,10 +100,12 @@ function addSubwayVideo(videoElement) {
             videoElement.style.height = 'auto';
             videoElement.style.maxWidth = 'none';
             videoElement.style.maxHeight = 'none';
+            videoElement.controls = false; // Disable native controls when not fullscreen
 
             subwayContainer.style.display = 'none';
         }
 
+        // Handle iframe resizing if needed
         if (isInIframe) {
             try {
                 const totalWidth = isFullscreen ? window.innerWidth : videoElement.offsetWidth;
