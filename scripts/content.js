@@ -41,8 +41,20 @@ function addSubwayVideo(videoElement) {
         try {
             isFullscreen = document.fullscreenElement !== null;
             if (!isFullscreen) {
-                const jwPlayerContainers = document.querySelectorAll('.jwplayer.jw-state-idle, .jwplayer.jw-state-playing, .jwplayer.jw-state-paused');
+                // Add JW Player specific check
+                const jwPlayerContainers = document.querySelectorAll('.jw-media, .jwplayer');
                 jwPlayerContainers.forEach(container => {
+                    const rect = container.getBoundingClientRect();
+                    const viewportArea = window.innerWidth * window.innerHeight;
+                    const containerArea = rect.width * rect.height;
+                    if (containerArea / viewportArea > 0.9) {
+                        isFullscreen = true;
+                    }
+                });
+
+                // Keep existing checks
+                const playerContainers = document.querySelectorAll('.kWidgetIframeContainer, .otherPlayerClass');
+                playerContainers.forEach(container => {
                     const rect = container.getBoundingClientRect();
                     const viewportArea = window.innerWidth * window.innerHeight;
                     const containerArea = rect.width * rect.height;
@@ -56,68 +68,159 @@ function addSubwayVideo(videoElement) {
         }
 
         if (isFullscreen) {
-            // Basic container setup
-            flexContainer.style.display = 'flex';
-            flexContainer.style.flexDirection = 'row';
-            flexContainer.style.gap = '0';
-            flexContainer.style.alignItems = 'center';
-            flexContainer.style.justifyContent = 'flex-start';
-            flexContainer.style.width = '100%';
-            flexContainer.style.height = '100vh';
-            flexContainer.style.position = 'fixed';
-            flexContainer.style.top = '0';
-            flexContainer.style.left = '0';
-            flexContainer.style.backgroundColor = 'transparent';
-            flexContainer.style.zIndex = '1';
+            // Check if it's a JW Player
+            const isJWPlayer = videoElement.closest('.jw-media, .jwplayer') !== null;
 
-            // Main video setup - make it the dominant element
-            videoElement.style.width = '75%';
-            videoElement.style.height = '100%';
-            videoElement.style.maxHeight = '100vh';
-            videoElement.style.objectFit = 'contain';
-            videoElement.style.position = 'relative';
-            videoElement.style.zIndex = '2';
+            // Ensure subway video is playing when entering fullscreen
+            if (subwayVideo && subwayVideo.paused) {
+                subwayVideo.play()
+                    .catch(error => console.log('Error resuming subway video:', error));
+            }
+
+            if (isJWPlayer) {
+                // Find the JW Player's media container
+                const jwMediaContainer = videoElement.closest('.jw-media');
+
+                if (jwMediaContainer) {
+                    // Create parent wrapper for both videos
+                    const parentWrapper = document.createElement('div');
+                    parentWrapper.style.display = 'flex';
+                    parentWrapper.style.flexDirection = 'row';
+                    parentWrapper.style.width = '100%';
+                    parentWrapper.style.height = '100%';
+                    parentWrapper.style.position = 'fixed';
+                    parentWrapper.style.top = '0';
+                    parentWrapper.style.left = '0';
+                    parentWrapper.style.backgroundColor = '#000';
+                    parentWrapper.style.zIndex = '1';
+
+                    // Set up the main video container
+                    jwMediaContainer.style.width = '75%';
+                    jwMediaContainer.style.height = '100%';
+                    jwMediaContainer.style.position = 'relative';
+                    jwMediaContainer.style.flex = '0 0 75%';
+                    jwMediaContainer.style.zIndex = '2';
+
+                    // Enable native controls as backup
+                    videoElement.controls = true;
+
+                    // Set up subway container
+                    subwayContainer.style.width = '25%';
+                    subwayContainer.style.height = '100%';
+                    subwayContainer.style.flex = '0 0 25%';
+                    subwayContainer.style.position = 'relative';
+                    subwayContainer.style.zIndex = '1';
+
+                    // Ensure subway video fills its container
+                    subwayVideo.style.width = '100%';
+                    subwayVideo.style.height = '100%';
+                    subwayVideo.style.objectFit = 'cover';
+
+                    // Move both elements into the wrapper
+                    const jwParent = jwMediaContainer.parentElement;
+                    jwParent.insertBefore(parentWrapper, jwMediaContainer);
+                    parentWrapper.appendChild(jwMediaContainer);
+                    parentWrapper.appendChild(subwayContainer);
+
+                    // Try to ensure JW Player controls are visible
+                    const jwControls = jwMediaContainer.closest('.jwplayer')?.querySelector('.jw-controls');
+                    if (jwControls) {
+                        jwControls.style.zIndex = '3';
+                        jwControls.style.display = 'block';
+                    }
+                }
+
+                // Video element styles
+                videoElement.style.width = '100%';
+                videoElement.style.height = '100%';
+                videoElement.style.maxHeight = '100vh';
+                videoElement.style.objectFit = 'contain';
+                videoElement.style.margin = '0';
+            } else {
+                // Normal video setup
+                // Create parent wrapper for both videos
+                const parentWrapper = document.createElement('div');
+                parentWrapper.style.display = 'flex';
+                parentWrapper.style.flexDirection = 'row';
+                parentWrapper.style.width = '100%';
+                parentWrapper.style.height = '100%';
+                parentWrapper.style.position = 'fixed';
+                parentWrapper.style.top = '0';
+                parentWrapper.style.left = '0';
+                parentWrapper.style.backgroundColor = '#000';
+                parentWrapper.style.zIndex = '9999999';
+
+                // Set up video container
+                videoElement.style.width = '75%';
+                videoElement.style.height = '100%';
+                videoElement.style.maxHeight = '100vh';
+                videoElement.style.objectFit = 'contain';
+                videoElement.style.flex = '0 0 75%';
+                videoElement.controls = true;
+
+                // Set up subway container
+                subwayContainer.style.width = '25%';
+                subwayContainer.style.height = '100%';
+                subwayContainer.style.flex = '0 0 25%';
+                subwayContainer.style.position = 'relative';
+
+                // Ensure subway video fills its container
+                subwayVideo.style.width = '100%';
+                subwayVideo.style.height = '100%';
+                subwayVideo.style.objectFit = 'cover';
+
+                if (videoElement.parentElement) {
+                    const videoParent = videoElement.parentElement;
+                    videoParent.insertBefore(parentWrapper, videoElement);
+                    parentWrapper.appendChild(videoElement);
+                    parentWrapper.appendChild(subwayContainer);
+                }
+            }
             videoElement.style.order = '1';
+            videoElement.controls = true;
 
-            // Subway video setup - make it secondary
+            // Subway video setup
             subwayContainer.style.width = '25%';
             subwayContainer.style.height = '100%';
-            subwayContainer.style.position = 'relative';
-            subwayContainer.style.zIndex = '1';
+            subwayContainer.style.flexShrink = '0';
             subwayContainer.style.order = '2';
             subwayContainer.style.display = 'block';
+            subwayContainer.style.position = 'relative';
 
             subwayVideo.style.width = '100%';
             subwayVideo.style.height = '100%';
             subwayVideo.style.objectFit = 'cover';
-
-            // For JWPlayer, ensure the player container remains visible
-            const jwPlayerContainer = videoElement.closest('.jwplayer');
-            if (jwPlayerContainer) {
-                jwPlayerContainer.style.width = '100%';
-                jwPlayerContainer.style.height = '100vh';
-                jwPlayerContainer.style.display = 'block';
-                // Ensure controls remain visible
-                const controls = jwPlayerContainer.querySelector('.jw-controls');
-                if (controls) {
-                    controls.style.zIndex = '3';
-                }
-            }
         } else {
             // Non-fullscreen styles
-            flexContainer.style.display = 'block';
-            flexContainer.style.width = 'auto';
-            flexContainer.style.height = 'auto';
-            flexContainer.style.position = 'static';
-            flexContainer.style.backgroundColor = 'transparent';
-
             videoElement.style.width = '100%';
             videoElement.style.height = 'auto';
             videoElement.style.maxWidth = 'none';
             videoElement.style.maxHeight = 'none';
+            videoElement.style.position = 'static';
+            videoElement.style.flex = 'none';
             videoElement.controls = false; // Disable native controls when not fullscreen
 
+            // Remove subway container completely when exiting fullscreen
             subwayContainer.style.display = 'none';
+            if (subwayContainer.parentElement) {
+                subwayContainer.parentElement.removeChild(subwayContainer);
+            }
+
+            // If we're in JW Player mode, clean up the wrapper but preserve the video
+            const parentWrapper = document.querySelector('div[style*="display: flex"][style*="position: fixed"]');
+            if (parentWrapper) {
+                // Move the video content back to its original position
+                const videoContent = parentWrapper.querySelector('.jw-media, video');
+                if (videoContent) {
+                    parentWrapper.parentElement.insertBefore(videoContent, parentWrapper);
+                    // Reset video container styles
+                    videoContent.style.width = '100%';
+                    videoContent.style.height = '100%';
+                    videoContent.style.position = 'relative';
+                }
+                // Remove the wrapper
+                parentWrapper.parentElement.removeChild(parentWrapper);
+            }
         }
 
         // Handle iframe resizing if needed
