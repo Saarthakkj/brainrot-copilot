@@ -1,6 +1,156 @@
 console.log('Content script loaded!');
 
+function isYouTubePage() {
+    return window.location.hostname.includes('youtube.com');
+}
+
+function handleYouTubeVideo() {
+    const movie_player = document.getElementById('movie_player');
+    if (!movie_player || movie_player.hasAttribute('data-subway-video-added')) return;
+
+    // Create our fullscreen container
+    const fullscreenContainer = document.createElement('div');
+    fullscreenContainer.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        z-index: 9999999;
+    `;
+
+    // Create container for embedded player
+    const playerContainer = document.createElement('div');
+    playerContainer.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 75%;
+        height: 100%;
+    `;
+
+    // Create subway video container
+    const subwayContainer = document.createElement('div');
+    subwayContainer.style.cssText = `
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 25%;
+        height: 100%;
+    `;
+
+    const subwayVideo = document.createElement('video');
+    subwayVideo.src = chrome.runtime.getURL('subway.mp4');
+    subwayVideo.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    `;
+    subwayVideo.autoplay = true;
+    subwayVideo.loop = true;
+    subwayVideo.muted = true;
+    subwayVideo.playsInline = true;
+
+    // Assemble the containers
+    subwayContainer.appendChild(subwayVideo);
+    fullscreenContainer.appendChild(playerContainer);
+    fullscreenContainer.appendChild(subwayContainer);
+    document.body.appendChild(fullscreenContainer);
+
+    // Function to get current video details
+    function getVideoDetails() {
+        const video = document.querySelector('video');
+        const videoId = new URLSearchParams(window.location.search).get('v');
+        return {
+            currentTime: video ? video.currentTime : 0,
+            videoId: videoId,
+            playing: !video?.paused,
+            originalVideo: video
+        };
+    }
+
+    // Function to create embedded player
+    function createEmbeddedPlayer(videoDetails) {
+        const embed = document.createElement('iframe');
+        embed.style.cssText = `
+            width: 100%;
+            height: 100%;
+            border: none;
+        `;
+
+        // Create YouTube embed URL with current timestamp
+        const startTime = Math.floor(videoDetails.currentTime);
+        embed.src = `https://www.youtube.com/embed/${videoDetails.videoId}?autoplay=1&start=${startTime}&enablejsapi=1`;
+
+        return embed;
+    }
+
+    // Handle fullscreen changes
+    function handleFullscreenRequest(e) {
+        // Prevent default fullscreen behavior
+        e.preventDefault();
+        e.stopPropagation();
+
+        const videoDetails = getVideoDetails();
+
+        // Pause the original video
+        if (videoDetails.originalVideo) {
+            videoDetails.originalVideo.pause();
+        }
+
+        // Clear previous iframe if it exists
+        playerContainer.innerHTML = '';
+
+        // Create new embedded player
+        const embed = createEmbeddedPlayer(videoDetails);
+        playerContainer.appendChild(embed);
+
+        // Show our container and make it fullscreen
+        fullscreenContainer.style.display = 'block';
+        fullscreenContainer.requestFullscreen().catch(e => console.log('Fullscreen error:', e));
+
+        // Ensure subway video is playing
+        subwayVideo.play().catch(e => console.log('Error playing subway video:', e));
+    }
+
+    // Handle exiting fullscreen
+    function handleFullscreenExit() {
+        if (!document.fullscreenElement) {
+            fullscreenContainer.style.display = 'none';
+            playerContainer.innerHTML = ''; // Remove embed
+
+            // Resume original video if it was playing before
+            const video = document.querySelector('video');
+            if (video) {
+                video.play().catch(e => console.log('Error resuming video:', e));
+            }
+        }
+    }
+
+    // Listen for fullscreen button clicks
+    const fullscreenButton = movie_player.querySelector('.ytp-fullscreen-button');
+    if (fullscreenButton) {
+        fullscreenButton.addEventListener('click', handleFullscreenRequest);
+    }
+
+    // Listen for 'f' key press
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            handleFullscreenRequest(e);
+        }
+    });
+
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', handleFullscreenExit);
+
+    movie_player.setAttribute('data-subway-video-added', 'true');
+}
+
 function addSubwayVideo(videoElement) {
+    if (isYouTubePage()) return; // Skip for YouTube
+
     if (videoElement.hasAttribute('data-subway-video-added') ||
         document.querySelector('.video-player-new') !== null) {
         return;
@@ -351,6 +501,20 @@ window.addEventListener('load', () => {
 });
 
 function observeDOM() {
+    if (isYouTubePage()) {
+        // For YouTube, we'll use a different approach
+        const checkForYouTubePlayer = setInterval(() => {
+            if (document.getElementById('movie_player')) {
+                handleYouTubeVideo();
+                clearInterval(checkForYouTubePlayer);
+            }
+        }, 1000);
+
+        // Clear interval after 10 seconds if player isn't found
+        setTimeout(() => clearInterval(checkForYouTubePlayer), 10000);
+        return;
+    }
+
     function processNode(node) {
         if (node.nodeName === 'VIDEO' ||
             (node.nodeName === 'DIV' && node.classList.contains('mwEmbedPlayer')) ||
