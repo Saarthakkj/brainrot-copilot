@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Extension with React",
+  "version": "1.0.0",
+  "description": "A Chrome extension built with React and Vite",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open Extension"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["subway.mp4"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": ["storage", "tabs"],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
