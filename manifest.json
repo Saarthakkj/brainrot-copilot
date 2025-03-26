@@ -2,8 +2,16 @@
   "manifest_version": 3,
   "name": "Attenture",
   "version": "1.0.0",
+  "action": {
+    "default_title": "Start Audio Capture"
+  },
   "description": "A Chrome extension for picture-in-picture style overlay",
-  "permissions": [],
+  "permissions": ["tabCapture", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

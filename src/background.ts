@@ -1,32 +1,71 @@
 // Chrome extension background script
 console.log("Background script loaded");
 
-// Handle browser action (toolbar button) clicks
+let isOverlayVisible = false; // Track visibility state
+
+// Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
-  if (tab.id) {
-    try {
-      await chrome.tabs.sendMessage(tab.id, { action: "toggleSubwayOverlay" });
-    } catch (error) {
-      console.error("Error sending message to content script:", error);
+  if (!tab.id) return;
 
-      // If there was an error, the content script might not be loaded
-      // Inject the content script and try again
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ["content.js"],
-      });
+  isOverlayVisible = !isOverlayVisible; // Toggle state
 
-      // Try sending the message again after a short delay
-      setTimeout(async () => {
-        try {
-          await chrome.tabs.sendMessage(tab.id!, {
-            action: "toggleSubwayOverlay",
-          });
-        } catch (e) {
-          console.error("Failed to send message after script injection:", e);
-        }
-      }, 100);
-    }
+  // Send message to content script to toggle visibility
+  chrome.tabs.sendMessage(tab.id, {
+    type: isOverlayVisible ? "SHOW_OVERLAY" : "HIDE_OVERLAY",
+  });
+
+  // If showing overlay and first time, also init capture
+  if (isOverlayVisible) {
+    chrome.tabs.sendMessage(tab.id, { type: "INIT_CAPTURE" });
+  }
+});
+
+// Handle messages from content script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "GET_TAB_AUDIO") {
+    // Get the current active tab
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      const activeTab = tabs[0];
+      if (!activeTab?.id) {
+        console.error("No active tab found");
+        sendResponse({ error: "No active tab found" });
+        return;
+      }
+
+      try {
+        // First, request the activeTab permission
+        await chrome.scripting.executeScript({
+          target: { tabId: activeTab.id },
+          func: () => {
+            console.log("Activating tab capture permission...");
+          },
+        });
+
+        // Then get the media stream ID
+        chrome.tabCapture.getMediaStreamId(
+          {
+            targetTabId: activeTab.id,
+            consumerTabId: activeTab.id,
+          },
+          (streamId) => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                "Error getting stream ID:",
+                chrome.runtime.lastError
+              );
+              sendResponse({ error: chrome.runtime.lastError.message });
+              return;
+            }
+            console.log("Got stream ID:", streamId);
+            sendResponse({ streamId });
+          }
+        );
+      } catch (error) {
+        console.error("Error:", error);
+        sendResponse({ error: error.message });
+      }
+    });
+    return true; // Required for async response
   }
 });
 
