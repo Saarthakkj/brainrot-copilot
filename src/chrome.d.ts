@@ -25,7 +25,7 @@ interface Chrome {
         keys: string[],
         callback: (result: { [key: string]: T }) => void
       ) => void;
-      set: (items: { [key: string]: any }) => void;
+      set: (items: { [key: string]: unknown }) => void;
     };
   };
   runtime: {

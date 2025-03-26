@@ -1,51 +1,52 @@
-# Chrome Extension with React and Vite
+# Subway Video Chrome Extension
 
-This is a Chrome extension boilerplate built with React and Vite, providing a modern development experience for building Chrome extensions.
+A Chrome extension that adds a subway video overlay to any video you're watching.
+
+## Project Structure
+
+The extension is organized into modules:
+
+- `src/content.ts`: Main entry point that initializes everything
+- `src/types.ts`: Type definitions used throughout the extension
+- `src/utils/dom.ts`: DOM utility functions for element creation and manipulation
+- `src/handlers/video-overlay.ts`: The main overlay handler for all videos
+- `src/handlers/youtube-detector.ts`: YouTube-specific video detection
+- `src/chrome.d.ts`: Type definitions for Chrome extension APIs
 
 ## Features
 
-- Built with React and TypeScript
-- Uses Vite for fast development and building
-- Chrome Extension Manifest V3 compatible
-- Background script and popup UI examples
-- Chrome storage API usage example
-- Content script that adds subway video to fullscreen videos
+- Adds a "Subway Mode" button to all videos (appears on hover)
+- Creates a custom overlay with the original video and subway video side by side
+- Works with YouTube, JW Player and standard HTML5 videos
+- No issues with fullscreen mode since it uses its own overlay container
+- Non-intrusive UI that only appears when needed
 
-## Development
+## How It Works
 
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
+1. The extension detects videos on the page
+2. It adds a hover button to each video
+3. When clicked, it creates an overlay with:
+   - The original video (75% width)
+   - The subway video (25% width)
+4. The overlay can be closed with an X button
+5. All original video state (position, etc.) is preserved
 
-## Building the Extension
-
-Build the extension with:
+## Building
 
 ```bash
-npm run build:extension
+# Install dependencies
+npm install
+
+# Build the extension
+npm run build
 ```
 
-This will:
+## Loading in Chrome
 
-1. Compile TypeScript files
-2. Build the React app with Vite
-3. Copy the manifest.json file to the dist folder
-
-The extension will be built in the `dist` directory.
-
-## Loading the Extension in Chrome
-
-1. Build the extension as described above
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the `dist` directory
-5. The extension should now be loaded and visible in your Chrome toolbar
+1. Open Chrome and navigate to `chrome://extensions`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select the `dist` directory
+4. The extension should now be installed and active
 
 ## Using the Subway Video Feature
 

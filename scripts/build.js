@@ -47,13 +47,13 @@ const copyPublicFiles = async () => {
   try {
     // Make sure dist directory exists
     await fs.mkdir(DIST_DIR, { recursive: true });
-    
+
     // Copy manifest.json
     await fs.copyFile(
       resolve(PUBLIC_DIR, 'manifest.json'),
       resolve(DIST_DIR, 'manifest.json')
     );
-    
+
     // Copy icon files
     const iconFiles = ['icon16.png', 'icon48.png', 'icon128.png'];
     for (const iconFile of iconFiles) {
@@ -88,7 +88,7 @@ const copyPublicFiles = async () => {
 const build = async () => {
   try {
     console.log('🚀 Building Chrome Extension...');
-    
+
     // Clean dist directory if it exists
     try {
       await fs.rm(DIST_DIR, { recursive: true, force: true });
@@ -96,26 +96,26 @@ const build = async () => {
     } catch (err) {
       // Ignore errors if directory doesn't exist
     }
-    
+
     // Build content script first
     console.log('Building content script...');
     await run('tsc -p tsconfig.content.json');
-    
+
     // Run TypeScript compiler for the rest
     await run('tsc -b');
-    
+
     // Run Vite build
     await run('vite build');
-    
+
     // Copy public files
     await copyPublicFiles();
-    
+
     console.log('✅ Chrome Extension built successfully in dist/ directory');
     console.log('🔍 To install in Chrome:');
     console.log('1. Open chrome://extensions/');
     console.log('2. Enable "Developer mode"');
     console.log('3. Click "Load unpacked" and select the dist/ directory');
-    
+
   } catch (err) {
     console.error('❌ Build failed:', err);
     process.exit(1);
