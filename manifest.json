@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Attenture",
+  "version": "1.0.0",
+  "description": "A Chrome extension for picture-in-picture style overlay",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content-script/main.tsx"]
+    }
+  ]
+}

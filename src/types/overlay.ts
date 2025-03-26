@@ -13,6 +13,5 @@ export interface DragState {
 
 export interface OverlayControls {
   closeButton: HTMLButtonElement;
-  muteButton: HTMLButtonElement;
   controlsContainer: HTMLDivElement;
 }

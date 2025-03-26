@@ -1,96 +1,185 @@
-import { OverlayState, OverlayControls } from "../types/overlay";
-import { createRoot } from "react-dom/client";
-import { OverlayContent } from "./OverlayContent";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { OverlayContent } from "../components/OverlayContent";
 
-// State management
-export const overlayState: OverlayState = {
-  visible: false,
-  element: null,
-};
+export const OverlayManager: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [mountPoint, setMountPoint] = useState<Element | null>(null);
 
-export function createOverlayControls(): OverlayControls {
-  const controls = document.createElement("div");
-  controls.style.cssText = `
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: flex;
-    gap: 5px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 2147483647;
-    pointer-events: auto !important;
-  `;
+  // Calculate dimensions based on screen height (16:9 aspect ratio)
+  const height = window.innerHeight * 0.7;
+  const width = height * (9 / 16); // 16:9 aspect ratio
 
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "✕";
-  closeButton.style.cssText = `
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    pointer-events: auto !important;
-  `;
+  // Initialize mount point
+  useEffect(() => {
+    setMountPoint(document.body);
+  }, []);
 
-  return { closeButton, muteButton: null, controlsContainer: controls };
-}
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreenElement =
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement;
 
-export function createOverlayContainer(): HTMLDivElement {
-  const overlay = document.createElement("div");
-  overlay.id = "subway-mode-overlay";
-  overlay.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px;
-    height: 480px;
-    z-index: 2147483647;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    resize: both;
-    background: white;
-    pointer-events: auto !important;
-    padding: 20px;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  `;
-  return overlay;
-}
+      // Create a new container for the overlay in fullscreen
+      if (fullscreenElement) {
+        const container = document.createElement("div");
+        container.style.position = "fixed";
+        container.style.zIndex = "2147483647";
+        container.style.pointerEvents = "none";
+        container.style.width = "100%";
+        container.style.height = "100%";
+        container.style.top = "0";
+        container.style.left = "0";
+        container.style.overflow = "visible";
+        container.style.display = "block";
+        container.style.opacity = "1";
+        fullscreenElement.appendChild(container);
+        setMountPoint(container);
+      } else {
+        setMountPoint(document.body);
+      }
+    };
 
-export function createTextContent(): HTMLDivElement {
-  const content = document.createElement("div");
-  content.id = "overlay-content-root";
-  content.style.cssText = `
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-  `;
+    // Watch for custom fullscreen implementations
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "style"
+        ) {
+          const target = mutation.target as HTMLElement;
+          if (
+            target.style.position === "fixed" &&
+            target.style.top === "0px" &&
+            target.style.left === "0px" &&
+            target.style.width === "100%" &&
+            target.style.height === "100%" &&
+            target.style.zIndex &&
+            parseInt(target.style.zIndex) > 1000
+          ) {
+            const container = document.createElement("div");
+            container.style.position = "fixed";
+            container.style.zIndex = "2147483647";
+            container.style.pointerEvents = "none";
+            container.style.width = "100%";
+            container.style.height = "100%";
+            container.style.top = "0";
+            container.style.left = "0";
+            container.style.overflow = "visible";
+            container.style.display = "block";
+            container.style.opacity = "1";
+            target.appendChild(container);
+            setMountPoint(container);
+          }
+        }
+      }
+    });
 
-  // Create React root and render the OverlayContent component
-  const root = createRoot(content);
-  root.render(
-    <OverlayContent
-      onClose={() => {
-        hideOverlay();
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        handleFullscreenChange
+      );
+      document.removeEventListener(
+        "MSFullscreenChange",
+        handleFullscreenChange
+      );
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target instanceof HTMLElement && e.target.closest(".close-button"))
+      return;
+    setIsDragging(true);
+    const rect = overlayRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  if (!isVisible || !mountPoint) return null;
+
+  const overlay = (
+    <div
+      ref={overlayRef}
+      onMouseDown={handleMouseDown}
+      style={{
+        position: "fixed",
+        left: position.x,
+        top: position.y,
+        background: "white",
+        padding: "20px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        zIndex: 2147483647,
+        cursor: isDragging ? "grabbing" : "grab",
+        userSelect: "none",
+        width: `${width}px`,
+        height: `${height}px`,
+        display: "flex",
+        flexDirection: "column",
+        pointerEvents: "auto",
+        visibility: "visible",
+        color: "black",
+        opacity: 1,
+        overflow: "visible",
       }}
-    />
+    >
+      <OverlayContent onClose={() => setIsVisible(false)} />
+    </div>
   );
 
-  return content;
-}
-
-export function hideOverlay(): void {
-  if (overlayState.element && overlayState.element.parentNode) {
-    overlayState.element.parentNode.removeChild(overlayState.element);
-    overlayState.element = null;
-    overlayState.visible = false;
-  }
-}
+  return createPortal(overlay, mountPoint);
+};
