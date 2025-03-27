@@ -1,75 +1,53 @@
-# Subway Video Chrome Extension
+# Tab Capture Recorder - React Extension
 
-A Chrome extension that adds a subway video overlay to any video you're watching.
-
-## Project Structure
-
-The extension is organized into modules:
-
-- `src/content.ts`: Main entry point that initializes everything
-- `src/types.ts`: Type definitions used throughout the extension
-- `src/utils/dom.ts`: DOM utility functions for element creation and manipulation
-- `src/handlers/video-overlay.ts`: The main overlay handler for all videos
-- `src/handlers/youtube-detector.ts`: YouTube-specific video detection
-- `src/chrome.d.ts`: Type definitions for Chrome extension APIs
+This Chrome extension allows you to record the current tab's audio and video using Chrome's tabCapture API, built with React, TypeScript, and Vite.
 
 ## Features
 
-- Adds a "Subway Mode" button to all videos (appears on hover)
-- Creates a custom overlay with the original video and subway video side by side
-- Works with YouTube, JW Player and standard HTML5 videos
-- No issues with fullscreen mode since it uses its own overlay container
-- Non-intrusive UI that only appears when needed
+- Record the current tab's audio and video
+- User-friendly interface with React components
+- TypeScript for type safety
+- Modern build system with Vite
 
-## How It Works
+## Development
 
-1. The extension detects videos on the page
-2. It adds a hover button to each video
-3. When clicked, it creates an overlay with:
-   - The original video (75% width)
-   - The subway video (25% width)
-4. The overlay can be closed with an X button
-5. All original video state (position, etc.) is preserved
+### Prerequisites
 
-## Building
+- Node.js and npm
+- Chrome browser
 
-```bash
-# Install dependencies
-npm install
+### Setup
 
-# Build the extension
-npm run build
-```
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-## Loading in Chrome
+### Building the Extension
 
-1. Open Chrome and navigate to `chrome://extensions`
-2. Enable "Developer mode"
+1. Build the extension:
+   ```
+   npm run build
+   ```
+2. The built extension will be in the `dist` directory.
+
+### Loading the Extension in Chrome
+
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable "Developer mode" (toggle in the top right)
 3. Click "Load unpacked" and select the `dist` directory
-4. The extension should now be installed and active
 
-## Using the Subway Video Feature
+## Usage
 
-This extension adds subway videos to fullscreen video players across the web:
-
-1. Replace the placeholder `public/subway.mp4` file with your actual subway video
-2. When any video on the web goes fullscreen, the extension will automatically add your subway video to the right side
-3. Works with YouTube and most other video players
-
-The extension handles different types of fullscreen modes:
-
-- Standard fullscreen videos
-- YouTube videos
-- Videos in iframes (when possible due to same-origin policy)
-- JW Player videos
-
-## Customization
-
-- Modify `src/App.tsx` to change the popup UI
-- Update `src/background.ts` to add background functionality
-- Edit `src/content.ts` to change the subway video behavior
-- Edit `public/manifest.json` to change extension metadata and permissions
+1. Click the extension icon to open the popup
+2. Click "Start Recording" to begin recording the current tab
+3. Click "Stop Recording" to stop the recording and view the recorded video
 
 ## License
 
-MIT
+This project is licensed under the Apache License 2.0 - see the original project for details.

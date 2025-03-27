@@ -3,19 +3,27 @@ import react from "@vitejs/plugin-react";
 import { crx } from "@crxjs/vite-plugin";
 import manifest from "./manifest.json";
 
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
   build: {
+    outDir: "dist",
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         content: "src/content-script/main.tsx",
-        background: "src/background.ts",
+        "service-worker": "src/service-worker.ts",
+        offscreen: "src/offscreen.ts",
       },
       output: {
-        entryFileNames: "[name].js",
-        chunkFileNames: "[name].js",
-        assetFileNames: "[name].[ext]",
+        entryFileNames: (chunk) => {
+          return chunk.name === "content" ? "content.js" : "[name].js";
+        },
+        chunkFileNames: "assets/[name].[hash].js",
+        assetFileNames: "assets/[name].[ext]",
       },
     },
+    sourcemap: true,
+    minify: false,
   },
 });

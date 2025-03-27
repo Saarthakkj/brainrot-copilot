@@ -1,7 +1,7 @@
-import { DragState } from "../types/overlay";
+import { DragState } from "../../types/overlay";
 
 export function setupDragHandlers(overlay: HTMLDivElement): void {
-  let dragState: DragState = {
+  const dragState: DragState = {
     isDragging: false,
     startX: 0,
     startY: 0,

@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { OverlayContent } from "../components/OverlayContent";
 
+interface MessageEvent {
+  type: string;
+  [key: string]: unknown;
+}
+
 export const OverlayManager: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(true);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [audioLevel, setAudioLevel] = useState(0);
   const [audioStatus, setAudioStatus] = useState<string>(
     "Click to start audio capture"
   );
@@ -26,13 +29,9 @@ export const OverlayManager: React.FC = () => {
     setMountPoint(document.body);
 
     // Listen for messages from background script
-    const messageListener = (message: any) => {
+    const messageListener = (message: MessageEvent) => {
       if (message.type === "INIT_CAPTURE") {
         initAudioCapture();
-      } else if (message.type === "SHOW_OVERLAY") {
-        setIsVisible(true);
-      } else if (message.type === "HIDE_OVERLAY") {
-        setIsVisible(false);
       }
     };
     chrome.runtime.onMessage.addListener(messageListener);
@@ -47,18 +46,18 @@ export const OverlayManager: React.FC = () => {
       console.log("Initializing audio capture...");
       setAudioStatus("Requesting tab audio...");
 
-      // Request stream ID from background script
+      // Get the stream ID from the background script
       chrome.runtime.sendMessage(
         { type: "GET_TAB_AUDIO" },
-        async (response) => {
+        async (response: { error?: string; streamId?: string }) => {
           console.log("Response:", response);
-          if (response.error) {
+          if (response?.error) {
             console.error("Error getting stream ID:", response.error);
             setAudioStatus(`Error: ${response.error}`);
             return;
           }
 
-          if (!response.streamId) {
+          if (!response?.streamId) {
             console.error("No stream ID received");
             setAudioStatus("Error: No stream ID received");
             return;
@@ -68,6 +67,7 @@ export const OverlayManager: React.FC = () => {
           setAudioStatus("Got stream ID, accessing media...");
 
           try {
+            // Get the stream using the ID
             const stream = await navigator.mediaDevices.getUserMedia({
               audio: {
                 mandatory: {
@@ -80,40 +80,52 @@ export const OverlayManager: React.FC = () => {
             console.log("Audio stream obtained:", stream);
             setAudioStatus("Audio stream connected");
 
-            // Create audio context and connect stream
-            audioContextRef.current = new AudioContext();
+            // Create a new audio context
+            const audioCtx = new AudioContext();
+            audioContextRef.current = audioCtx;
 
-            // Create source from the stream
-            audioSourceRef.current =
-              audioContextRef.current.createMediaStreamSource(stream);
+            // Create media stream source from the captured stream
+            const source = audioCtx.createMediaStreamSource(stream);
+            audioSourceRef.current = source;
 
-            // Create analyzer node
-            analyserRef.current = audioContextRef.current.createAnalyser();
-            analyserRef.current.fftSize = 256;
+            // Create analyzer for visualization
+            const analyser = audioCtx.createAnalyser();
+            analyserRef.current = analyser;
+            analyser.fftSize = 256;
 
-            // Create a gain node to control volume
-            const gainNode = audioContextRef.current.createGain();
-            gainNode.gain.value = 1.0; // Full volume
+            // Create a gain node to control the output volume
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 1.0; // Set to full volume
 
-            // Connect the nodes:
-            // Source -> Analyzer -> Gain -> Destination
-            audioSourceRef.current.connect(analyserRef.current);
-            analyserRef.current.connect(gainNode);
-            gainNode.connect(audioContextRef.current.destination);
+            // Connect the audio nodes:
+            // source -> gainNode -> destination (for system audio)
+            // source -> analyser (for visualization)
+            source.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            // source.connect(analyser);
 
-            // Start audio visualization
+            // Start audio visualization process
             visualizeAudio();
-          } catch (error) {
+
+            console.log(
+              "Audio routing established - system audio should be preserved"
+            );
+            setAudioStatus("Audio connected and playing");
+          } catch (error: unknown) {
             console.error("Error accessing media stream:", error);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
             setAudioStatus(
-              `Error: Failed to access media stream - ${error.message}`
+              `Error: Failed to access media stream - ${errorMessage}`
             );
           }
         }
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error capturing tab audio:", error);
-      setAudioStatus("Error: " + error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setAudioStatus("Error: " + errorMessage);
     }
   };
 
@@ -128,9 +140,6 @@ export const OverlayManager: React.FC = () => {
 
       analyserRef.current.getByteFrequencyData(dataArray);
       const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-
-      // Update audio level (0-100)
-      setAudioLevel(Math.min(100, (average / 256) * 100));
 
       // Update the audio meter element directly
       const audioMeter = document.getElementById("audio-meter");
@@ -153,9 +162,10 @@ export const OverlayManager: React.FC = () => {
     const handleFullscreenChange = () => {
       const fullscreenElement =
         document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement;
+        (document as { webkitFullscreenElement?: Element })
+          .webkitFullscreenElement ||
+        (document as { mozFullScreenElement?: Element }).mozFullScreenElement ||
+        (document as { msFullscreenElement?: Element }).msFullscreenElement;
 
       // Create a new container for the overlay in fullscreen
       if (fullscreenElement) {
@@ -287,7 +297,7 @@ export const OverlayManager: React.FC = () => {
     };
   }, []);
 
-  if (!isVisible || !mountPoint) return null;
+  if (!mountPoint) return null;
 
   const overlay = (
     <div
@@ -373,7 +383,10 @@ export const OverlayManager: React.FC = () => {
       />
 
       <OverlayContent
-        onClose={() => setIsVisible(false)}
+        onClose={() => {
+          // Send message to hide the overlay
+          chrome.runtime.sendMessage({ type: "toggle-overlay" });
+        }}
         audioStatus={audioStatus}
         onRetry={initAudioCapture}
       />

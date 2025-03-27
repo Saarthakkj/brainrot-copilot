@@ -1,21 +1,36 @@
 {
   "manifest_version": 3,
-  "name": "Attenture",
+  "name": "Tab Capture - Audio Recorder",
   "version": "1.0.0",
   "action": {
-    "default_title": "Start Audio Capture"
+    "default_title": "Start Audio Capture",
+    "default_icon": "icons/not-recording.png"
   },
-  "description": "A Chrome extension for picture-in-picture style overlay",
-  "permissions": ["tabCapture", "activeTab", "scripting"],
+  "description": "Records audio from the current tab in an offscreen document.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "background",
+    "activeTab",
+    "tabCapture",
+    "notifications",
+    "offscreen"
+  ],
   "host_permissions": ["<all_urls>"],
   "background": {
-    "service_worker": "src/background.ts",
+    "service_worker": "dist/service-worker.js",
     "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content-script/main.tsx"]
+      "js": ["dist/content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["offscreen.html", "src/offscreen.ts"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
