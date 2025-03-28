@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Overlay from './src/components/Overlay';
 
+let overlayRoot = null;
+
 // Create and inject the overlay container
 const overlayContainer = document.createElement('div');
 overlayContainer.id = 'tab-capture-overlay-container';
@@ -89,20 +91,16 @@ observer.observe(document.documentElement, {
     attributeFilter: ["style", "class"],
 });
 
-// Listen for messages from the service worker and offscreen document
+// Listen for messages from the service worker
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'ping') {
-        // Respond to ping to indicate content script is ready
-        sendResponse({ status: 'ready' });
-        return true;
-    }
     if (message.type === 'toggle-overlay') {
-        overlayContainer.style.display = message.show ? 'block' : 'none';
         if (message.show) {
-            // Initialize the overlay with React
-            const root = createRoot(overlayContainer);
-            root.render(<Overlay />);
+            showOverlay();
+        } else {
+            hideOverlay();
         }
+    } else if (message.type === 'ping') {
+        sendResponse({ status: 'ok' });
     } else if (message.type === 'audio-level') {
         // Update the audio meter visualization
         const audioMeter = document.getElementById('audio-meter');
@@ -113,7 +111,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             )`;
         }
     }
+    return true;
 });
+
+function showOverlay() {
+    if (!overlayRoot) {
+        const container = document.createElement('div');
+        container.id = 'tab-capture-overlay-container';
+        document.body.appendChild(container);
+        overlayRoot = createRoot(container);
+        overlayRoot.render(<Overlay />);
+    }
+}
+
+function hideOverlay() {
+    if (overlayRoot) {
+        overlayRoot.unmount();
+        overlayRoot = null;
+    }
+}
 
 // Function to setup drag handlers
 function setupDragHandlers(overlay) {
