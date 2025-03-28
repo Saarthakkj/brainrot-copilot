@@ -1,34 +1,25 @@
 {
-  "name": "sample.tabcapture-recorder",
-  "private": true,
-  "version": "0.0.0",
+  "name": "tab-capture-recorder",
+  "version": "1.0.0",
+  "description": "Chrome extension for tab capture recording",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp -r public/* dist/",
-    "build:extension": "tsc -p tsconfig.node.json && vite build && cp -r public/* dist/",
-    "lint": "eslint .",
+    "build": "vite build && npm run build:css",
     "preview": "vite preview",
-    "watch": "vite build --watch"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css",
+    "watch:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --watch"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.0.0-beta.23",
-    "@eslint/js": "^9.21.0",
-    "@types/chrome": "^0.0.312",
-    "@types/node": "^22.13.14",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^9.21.0",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^15.15.0",
-    "typescript": "~5.7.2",
-    "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "@types/chrome": "^0.0.260",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.3"
   }
-}
+} 

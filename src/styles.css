@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your existing custom styles */
+#tab-capture-overlay-container {
+    @apply fixed inset-0 pointer-events-none z-max overflow-visible;
+    display: none;
+}
+
+#tab-capture-overlay {
+    @apply fixed left-5 top-5 bg-black rounded-[44px] shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-max overflow-hidden border-[10px] border-black;
+}
+
+.notch {
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[30px] bg-black rounded-b-[14px] z-max-plus;
+}
+
+.volume-button {
+    @apply absolute -left-[12px] w-1 bg-[#222] rounded-[2px] z-max-plus;
+}
+
+.volume-up {
+    @apply top-[100px] h-[50px];
+}
+
+.volume-down {
+    @apply top-[160px] h-[50px];
+}
+
+.power-button {
+    @apply absolute -right-[12px] top-[120px] w-1 h-[60px] bg-[#222] rounded-[2px] z-max-plus;
+}
+
+.content {
+    @apply w-full h-full flex flex-col relative bg-gradient-to-br from-[#1a2a6c] via-[#b21f1f] to-[#fdbb2d];
+}
+
+.status-bar {
+    @apply flex justify-between px-4 py-1 text-white text-xs font-bold h-6 bg-black/20 backdrop-blur;
+}
+
+.status-icons {
+    @apply flex gap-1;
+}
+
+.app-grid {
+    @apply flex-1 grid grid-cols-3 gap-3 p-3 pt-12;
+}
+
+.app-icon {
+    @apply flex flex-col items-center w-14 transition-all duration-200 ease-in-out hover:scale-110 hover:opacity-80;
+}
+
+.app-icon-image {
+    @apply w-14 h-14 rounded-[18px] overflow-hidden shadow-lg mb-1;
+}
+
+.app-icon-image img {
+    @apply w-full h-full object-cover;
+}
+
+.app-icon-name {
+    @apply text-[10px] text-white text-center truncate w-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)];
+}
+
+.home-indicator {
+    @apply absolute bottom-2 left-1/2 -translate-x-1/2 w-[30%] h-1 bg-white/50 rounded;
+} 
