@@ -99,26 +99,77 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else {
             hideOverlay();
         }
+        sendResponse({ success: true });
     } else if (message.type === 'ping') {
         sendResponse({ status: 'ok' });
+    } else if (message.type === 'audio-data') {
+        // Process audio data message from service worker
+        if (window.lastAudioDataTime) {
+            // Reset the no-audio warning if we're receiving data
+            window.lastAudioDataTime = Date.now();
+        }
+        sendResponse({ success: true });
+        return true;
     } else if (message.type === 'audio-level') {
+        // Record the time we received an audio level update
+        if (!window.lastAudioDataTime) {
+            window.lastAudioDataTime = Date.now();
+
+            // Start monitoring for audio level updates
+            if (!window.audioLevelMonitor) {
+                window.audioLevelMonitor = setInterval(() => {
+                    const now = Date.now();
+                    const timeSinceLastUpdate = now - window.lastAudioDataTime;
+
+                    // If no updates for 3 seconds, show warning
+                    if (timeSinceLastUpdate > 3000) {
+                        console.warn('[UI] No audio level updates received in the last 3 seconds');
+
+                        // Update UI to show warning
+                        const audioMeter = document.getElementById('audio-meter');
+                        if (audioMeter) {
+                            audioMeter.style.background = `linear-gradient(90deg, 
+                                #ff5252 ${Math.min(30, timeSinceLastUpdate / 100)}%, 
+                                rgba(255,82,82,0.1) ${Math.min(30, timeSinceLastUpdate / 100)}%
+                            )`;
+
+                            // Add pulsing effect
+                            audioMeter.style.animation = 'pulse 1s infinite';
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        window.lastAudioDataTime = Date.now();
+
         // Update the audio meter visualization
         const audioMeter = document.getElementById('audio-meter');
         if (audioMeter) {
+            // Remove warning indicators if we're getting updates again
+            audioMeter.style.animation = '';
+
+            // Update the level indicator
             audioMeter.style.background = `linear-gradient(90deg, 
                 #0d84fc ${message.level}%, 
                 rgba(13,132,252,0.1) ${message.level}%
             )`;
         }
     }
-    return true;
+    return true; // Keep the message channel open for async response
 });
 
 function showOverlay() {
     if (!overlayRoot) {
-        const container = document.createElement('div');
-        container.id = 'tab-capture-overlay-container';
-        document.body.appendChild(container);
+        // Create container if it doesn't exist
+        let container = document.getElementById('tab-capture-overlay-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'tab-capture-overlay-container';
+            document.body.appendChild(container);
+        }
+
+        // Create React root and render overlay
         overlayRoot = createRoot(container);
         overlayRoot.render(<Overlay />);
     }
@@ -129,68 +180,10 @@ function hideOverlay() {
         overlayRoot.unmount();
         overlayRoot = null;
     }
-}
-
-// Function to setup drag handlers
-function setupDragHandlers(overlay) {
-    const dragState = {
-        isDragging: false,
-        startX: 0,
-        startY: 0,
-        startLeft: 0,
-        startTop: 0,
-    };
-
-    overlay.onmousedown = (e) => {
-        // Initialize position with computed values to prevent teleporting
-        if (
-            overlay.style.right &&
-            overlay.style.bottom &&
-            (!overlay.style.left || !overlay.style.top)
-        ) {
-            const rect = overlay.getBoundingClientRect();
-            overlay.style.left = `${rect.left}px`;
-            overlay.style.top = `${rect.top}px`;
-            overlay.style.right = "auto";
-            overlay.style.bottom = "auto";
-        }
-
-        dragState.isDragging = true;
-        dragState.startX = e.clientX;
-        dragState.startY = e.clientY;
-        dragState.startLeft = parseInt(overlay.style.left || "0");
-        dragState.startTop = parseInt(overlay.style.top || "0");
-
-        overlay.style.cursor = "grabbing";
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const mouseMoveHandler = (e) => {
-        if (!dragState.isDragging) return;
-
-        const newLeft = dragState.startLeft + (e.clientX - dragState.startX);
-        const newTop = dragState.startTop + (e.clientY - dragState.startY);
-
-        overlay.style.right = "auto";
-        overlay.style.bottom = "auto";
-        overlay.style.left = `${newLeft}px`;
-        overlay.style.top = `${newTop}px`;
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const mouseUpHandler = (e) => {
-        if (dragState.isDragging) {
-            dragState.isDragging = false;
-            overlay.style.cursor = "grab";
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    };
-
-    document.addEventListener("mousemove", mouseMoveHandler, true);
-    document.addEventListener("mouseup", mouseUpHandler, true);
+    const container = document.getElementById('tab-capture-overlay-container');
+    if (container) {
+        container.remove();
+    }
 }
 
 // Function to create an app icon
@@ -285,9 +278,6 @@ function initializeOverlay() {
 
     overlay.appendChild(content);
     overlayContainer.appendChild(overlay);
-
-    // Setup drag handlers
-    setupDragHandlers(overlay);
 }
 
 // Add custom styles for text shadow

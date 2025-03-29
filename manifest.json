@@ -1,5 +1,5 @@
 {
-  "name": "Tab Capture - Recorder",
+  "name": "Attenture",
   "description": "Records the current tab in an offscreen document.",
   "version": "1",
   "manifest_version": 3,
@@ -23,5 +23,9 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["tabCapture", "offscreen", "activeTab", "scripting"]
+  "permissions": ["tabCapture", "offscreen", "activeTab", "scripting"],
+  "host_permissions": ["https://*.speechmatics.com/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
 }

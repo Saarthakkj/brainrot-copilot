@@ -5,11 +5,11 @@
 /* Your existing custom styles */
 #tab-capture-overlay-container {
     @apply fixed inset-0 pointer-events-none z-max overflow-visible;
-    display: none;
+    display: block;
 }
 
 #tab-capture-overlay {
-    @apply fixed left-5 top-5 bg-black rounded-[44px] shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-max overflow-hidden border-[10px] border-black;
+    @apply fixed left-5 top-5 bg-black rounded-[44px] shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-[999999] overflow-hidden border-[10px] border-black;
 }
 
 .notch {
@@ -66,4 +66,26 @@
 
 .home-indicator {
     @apply absolute bottom-2 left-1/2 -translate-x-1/2 w-[30%] h-1 bg-white/50 rounded;
+}
+
+/* Transcription styles */
+.app-content {
+    @apply flex-1 flex flex-col p-3;
+}
+
+.transcription-button {
+    @apply text-sm font-medium;
+}
+
+/* Scrollbar styles for transcript container */
+.overflow-y-auto::-webkit-scrollbar {
+    @apply w-1;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    @apply bg-black/20 rounded;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    @apply bg-white/30 rounded hover:bg-white/50;
 } 

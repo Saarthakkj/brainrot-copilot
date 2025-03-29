@@ -17,7 +17,7 @@ export default defineConfig({
             },
             output: {
                 entryFileNames: '[name].js',
-                chunkFileNames: '[name].js',
+                chunkFileNames: 'chunks/[name].[hash].js',
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name === 'styles.css') return 'styles.css';
                     return '[name].[ext]';
@@ -27,6 +27,8 @@ export default defineConfig({
         },
         outDir: 'dist',
         emptyOutDir: true,
+        sourcemap: true,
+        minify: false,
     },
     resolve: {
         alias: {

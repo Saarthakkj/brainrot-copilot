@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useDrag = (ref) => {
     const [isDragging, setIsDragging] = useState(false);
@@ -9,58 +9,61 @@ export const useDrag = (ref) => {
         startTop: 0,
     });
 
-    useEffect(() => {
+    const handleMouseDown = useCallback((e) => {
         if (!ref.current) return;
-
         const overlay = ref.current;
 
-        const handleMouseDown = (e) => {
-            // Initialize position with computed values to prevent teleporting
-            if (
-                overlay.style.right &&
-                overlay.style.bottom &&
-                (!overlay.style.left || !overlay.style.top)
-            ) {
-                const rect = overlay.getBoundingClientRect();
-                overlay.style.left = `${rect.left}px`;
-                overlay.style.top = `${rect.top}px`;
-                overlay.style.right = "auto";
-                overlay.style.bottom = "auto";
-            }
-
-            setIsDragging(true);
-            setDragState({
-                startX: e.clientX,
-                startY: e.clientY,
-                startLeft: parseInt(overlay.style.left || "5"),
-                startTop: parseInt(overlay.style.top || "5"),
-            });
-
-            e.preventDefault();
-            e.stopPropagation();
-        };
-
-        const handleMouseMove = (e) => {
-            if (!isDragging) return;
-
-            const newLeft = dragState.startLeft + (e.clientX - dragState.startX);
-            const newTop = dragState.startTop + (e.clientY - dragState.startY);
-
+        // Initialize position with computed values to prevent teleporting
+        if (
+            overlay.style.right &&
+            overlay.style.bottom &&
+            (!overlay.style.left || !overlay.style.top)
+        ) {
+            const rect = overlay.getBoundingClientRect();
+            overlay.style.left = `${rect.left}px`;
+            overlay.style.top = `${rect.top}px`;
             overlay.style.right = "auto";
             overlay.style.bottom = "auto";
-            overlay.style.left = `${newLeft}px`;
-            overlay.style.top = `${newTop}px`;
+        }
+
+        setIsDragging(true);
+        setDragState({
+            startX: e.clientX,
+            startY: e.clientY,
+            startLeft: parseInt(overlay.style.left || "5"),
+            startTop: parseInt(overlay.style.top || "5"),
+        });
+
+        e.preventDefault();
+        e.stopPropagation();
+    }, [ref]);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!isDragging || !ref.current) return;
+        const overlay = ref.current;
+
+        const newLeft = dragState.startLeft + (e.clientX - dragState.startX);
+        const newTop = dragState.startTop + (e.clientY - dragState.startY);
+
+        overlay.style.right = "auto";
+        overlay.style.bottom = "auto";
+        overlay.style.left = `${newLeft}px`;
+        overlay.style.top = `${newTop}px`;
+        e.preventDefault();
+        e.stopPropagation();
+    }, [isDragging, dragState, ref]);
+
+    const handleMouseUp = useCallback((e) => {
+        if (isDragging) {
+            setIsDragging(false);
             e.preventDefault();
             e.stopPropagation();
-        };
+        }
+    }, [isDragging]);
 
-        const handleMouseUp = (e) => {
-            if (isDragging) {
-                setIsDragging(false);
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
+    useEffect(() => {
+        if (!ref.current) return;
+        const overlay = ref.current;
 
         overlay.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove, true);
@@ -71,22 +74,12 @@ export const useDrag = (ref) => {
             document.removeEventListener('mousemove', handleMouseMove, true);
             document.removeEventListener('mouseup', handleMouseUp, true);
         };
-    }, [ref, isDragging, dragState]);
+    }, [ref, handleMouseDown, handleMouseMove, handleMouseUp]);
 
     return {
         isDragging,
-        handleMouseDown: (e) => {
-            if (!ref.current) return;
-            const overlay = ref.current;
-            handleMouseDown(e);
-        },
-        handleMouseMove: (e) => {
-            if (!ref.current) return;
-            handleMouseMove(e);
-        },
-        handleMouseUp: (e) => {
-            if (!ref.current) return;
-            handleMouseUp(e);
-        },
+        handleMouseDown,
+        handleMouseMove,
+        handleMouseUp,
     };
 }; 
