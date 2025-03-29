@@ -31,7 +31,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true; // Keep the message channel open for async response
   } else if (message.type === 'get-audio-stream' && message.target === 'background') {
-    console.log('[SERVICE] Received request for audio stream from tab:', sender.tab?.id);
+    // console.log('[SERVICE] Received request for audio stream from tab:', sender.tab?.id); // VERBOSE
     // Forward the request to the offscreen document with the tab ID
     chrome.runtime.getContexts({}).then(existingContexts => {
       const offscreenDocument = existingContexts.find(
@@ -39,13 +39,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       );
 
       if (offscreenDocument && offscreenDocument.documentUrl.endsWith('#recording')) {
-        console.log('[SERVICE] Forwarding audio stream request to offscreen document for tab:', sender.tab?.id);
+        // console.log('[SERVICE] Forwarding audio stream request to offscreen document for tab:', sender.tab?.id); // VERBOSE
         chrome.runtime.sendMessage({
           type: 'get-audio-stream',
           target: 'offscreen',
           tabId: sender.tab?.id
         }, (response) => {
-          console.log('[SERVICE] Offscreen document response:', response);
+          // console.log('[SERVICE] Offscreen document response:', response); // DEBUG
           sendResponse(response);
         });
       } else {
@@ -56,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep the message channel open for async response
   } else if (message.type === 'enable-transcription') {
     // Forward enable/disable transcription request to offscreen document
-    console.log('[SERVICE] Forwarding transcription ' + (message.enable ? 'enable' : 'disable') + ' request');
+    // console.log('[SERVICE] Forwarding transcription ' + (message.enable ? 'enable' : 'disable') + ' request'); // VERBOSE
     chrome.runtime.getContexts({}).then(existingContexts => {
       const offscreenDocument = existingContexts.find(
         (c) => c.contextType === 'OFFSCREEN_DOCUMENT'
@@ -128,7 +128,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         data: message.data
       }, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn('[SERVICE] Error forwarding audio data:', chrome.runtime.lastError);
+          // Don't log this routinely, only if it causes problems
+          // console.warn('[SERVICE] Error forwarding audio data:', chrome.runtime.lastError);
         }
         if (sendResponse) sendResponse(response || { success: true });
       });
@@ -145,10 +146,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         level: message.level
       }, (response) => {
         if (chrome.runtime.lastError) {
-          // Don't log this error as it floods the console
+          // Ignore this error, it happens if the content script isn't ready
           // console.warn('[SERVICE] Error forwarding audio level:', chrome.runtime.lastError);
         }
-        // Don't report this error to the sender to avoid console noise
         if (sendResponse) sendResponse({ success: true });
       });
     } catch (error) {
@@ -158,7 +158,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep the message channel open for async response
   } else if (message.type === 'audio-level') {
     // This is the direct message from the offscreen document
-    // No need to log each level update as it creates too much noise
+    // No need to log each level update
     if (sendResponse) sendResponse({ success: true });
     return true;
   }
@@ -184,7 +184,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     });
   } else {
     recording = offscreenDocument.documentUrl.endsWith('#recording');
-    console.log('[SERVICE] Offscreen document already exists, recording state:', recording);
+    // console.log('[SERVICE] Offscreen document already exists, recording state:', recording); // VERBOSE
   }
 
   if (recording) {
@@ -199,7 +199,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     try {
       await chrome.tabs.sendMessage(tab.id, { type: 'toggle-overlay', show: false });
     } catch (error) {
-      console.log('[SERVICE] Content script not ready, injecting it now...');
+      // console.log('[SERVICE] Content script not ready, injecting it now...'); // VERBOSE
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ['dist/content.js']
@@ -219,7 +219,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   // Ensure content script is injected
   try {
     await chrome.tabs.sendMessage(tab.id, { type: 'ping' });
-    console.log('[SERVICE] Content script is ready');
+    // console.log('[SERVICE] Content script is ready'); // VERBOSE
   } catch (error) {
     console.log('[SERVICE] Content script not ready, injecting it now...');
     await chrome.scripting.executeScript({
@@ -234,7 +234,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     target: 'offscreen',
     data: streamId
   }, (response) => {
-    console.log('[SERVICE] Recording started response:', response);
+    // console.log('[SERVICE] Recording started response:', response); // DEBUG
   });
 
   chrome.action.setIcon({ path: '/icons/recording.png' });

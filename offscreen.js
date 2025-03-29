@@ -110,7 +110,7 @@ async function startRecording(streamId) {
     sampleRate: SAMPLE_RATE,
     latencyHint: 'interactive'
   });
-  console.log('[AUDIO] Audio context created with sample rate:', audioContext.sampleRate);
+  console.log('[AUDIO] Offscreen: Audio context created with sample rate:', audioContext.sampleRate);
 
   const source = audioContext.createMediaStreamSource(media);
   analyser = audioContext.createAnalyser();
@@ -118,7 +118,6 @@ async function startRecording(streamId) {
   source.connect(analyser);
 
   // IMPORTANT: Connect the source directly to destination to hear audio
-  // Comment this out if you don't want to hear the audio
   source.connect(audioContext.destination);
 
   // Skip AudioWorklet and use the direct processing method
@@ -138,7 +137,7 @@ async function startRecording(streamId) {
   };
   recorder.start();
 
-  console.log('[AUDIO] Recording started successfully');
+  console.log('[AUDIO] Offscreen: Recording started successfully');
 
   // Record the current state in the URL
   window.location.hash = 'recording';
@@ -161,7 +160,7 @@ function handleAudioProcessing(source) {
   // For audio level logging
   let sampleCounter = 0;
   let maxLevel = 0;
-  const LOG_INTERVAL = 50; // Log more frequently (every 50 samples)
+  const LOG_INTERVAL = 100; // Log less frequently (every 100 samples = ~2s)
   let lastSendTime = Date.now();
   const SEND_INTERVAL = 100; // Send level updates every 100ms
 
@@ -186,7 +185,7 @@ function handleAudioProcessing(source) {
       // Calculate normalized level (0-100)
       const level = Math.min(100, rms * 200); // Increased sensitivity
 
-      // Send level update to service worker
+      // Send level update to service worker (no need to log this every time)
       chrome.runtime.sendMessage({
         type: 'audio-level',
         level: level
@@ -202,9 +201,9 @@ function handleAudioProcessing(source) {
       }
     }
 
-    // Log audio levels periodically
+    // Log audio levels periodically (less frequently)
     if (sampleCounter % LOG_INTERVAL === 0) {
-      console.log(`[AUDIO LEVELS] RMS: ${rms.toFixed(4)}, dB: ${dbFS.toFixed(1)} dBFS, Max: ${maxLevel.toFixed(4)}`);
+      // console.log(`[AUDIO LEVELS] RMS: ${rms.toFixed(4)}, dB: ${dbFS.toFixed(1)} dBFS, Max: ${maxLevel.toFixed(4)}`); // VERBOSE
       maxLevel = 0; // Reset max for next interval
     }
 
@@ -218,22 +217,22 @@ function handleAudioProcessing(source) {
     // Check if the audio has any content (not just silence)
     const hasAudio = boostedData.some(sample => Math.abs(sample) > 0.01);
 
-    // Log when we find significant audio
+    // Log when we find significant audio (keep this for debugging)
     if (hasAudio && rms > 0.03) {
-      console.log(`[AUDIO DETECTED] Audio signal detected: ${rms.toFixed(4)}`);
+      // console.log(`[AUDIO DETECTED] Offscreen: Audio signal detected: ${rms.toFixed(4)}`); // VERBOSE
     }
 
     // Always send audio data when transcription is enabled
     if (enableTranscription && activeTabId) {
       // Only send data periodically to avoid overloading
-      if (hasAudio || Math.random() < 0.1) { // Send all non-silent frames plus 10% of silent ones
+      if (hasAudio || Math.random() < 0.1) {
         chrome.runtime.sendMessage({
           type: 'forward-audio-data',
           tabId: activeTabId,
-          data: Array.from(boostedData) // Convert to regular array for message passing
+          data: Array.from(boostedData)
         }, (response) => {
           if (response && !response.success) {
-            console.error('[AUDIO] Error forwarding audio data:', response.error);
+            console.error('[AUDIO] Offscreen: Error forwarding audio data:', response.error);
           }
         });
       }
@@ -245,7 +244,7 @@ function handleAudioProcessing(source) {
 
   // Start processing immediately
   processAudio();
-  console.log('[AUDIO] Audio processing started');
+  console.log('[AUDIO] Offscreen: Audio processing started');
 }
 
 async function stopRecording() {
@@ -286,11 +285,11 @@ async function stopRecording() {
 // Send audio stream to a tab for transcription
 function sendAudioStream(tabId) {
   if (!tabId || !recorder || recorder.state !== 'recording') {
-    console.error('[AUDIO] Cannot send audio stream - recording not active or invalid tab ID');
+    console.error('[AUDIO] Offscreen: Cannot send audio stream - recording not active or invalid tab ID');
     return;
   }
 
-  console.log('[AUDIO] Setting up audio stream for tab ID:', tabId);
+  console.log('[AUDIO] Offscreen: Setting up audio stream for tab ID:', tabId);
 
   // Enable transcription mode
   enableTranscription = true;
@@ -324,35 +323,25 @@ function startVisualization() {
     const level = Math.min(100, (average / 256) * 100);
 
     // Only log significant changes to reduce noise
-    if (Math.abs(level - lastLevel) > 5) {
-      console.log(`[OFFSCREEN] Audio level: ${level.toFixed(1)}%`);
+    if (Math.abs(level - lastLevel) > 10) { // Increase threshold for logging
+      // console.log(`[OFFSCREEN] Audio level: ${level.toFixed(1)}%`); // VERBOSE
       lastLevel = level;
     }
 
-    // Send the audio level to the service worker
-    chrome.runtime.sendMessage({
-      type: 'audio-level',
-      level: level
-    });
+    // Send the audio level to the service worker (handled in processAudio)
+    // chrome.runtime.sendMessage({
+    //   type: 'audio-level',
+    //   level: level
+    // });
 
-    // If we have an active tab for transcription, send the level via service worker
-    if (enableTranscription && activeTabId) {
-      chrome.runtime.sendMessage({
-        type: 'forward-audio-level',
-        tabId: activeTabId,
-        level: level
-      });
-
-      // Directly try sending to tab as a backup (this might not work due to permissions)
-      try {
-        chrome.tabs.sendMessage(activeTabId, {
-          type: 'audio-level',
-          level: level
-        });
-      } catch (e) {
-        // This might fail, but that's okay - the service worker approach should work
-      }
-    }
+    // If we have an active tab for transcription, send the level via service worker (handled in processAudio)
+    // if (enableTranscription && activeTabId) {
+    //   chrome.runtime.sendMessage({
+    //     type: 'forward-audio-level',
+    //     tabId: activeTabId,
+    //     level: level
+    //   });
+    // }
 
     animationFrameId = requestAnimationFrame(updateVisualization);
   }

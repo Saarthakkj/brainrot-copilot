@@ -123,7 +123,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                     // If no updates for 3 seconds, show warning
                     if (timeSinceLastUpdate > 3000) {
-                        console.warn('[UI] No audio level updates received in the last 3 seconds');
+                        // console.warn('[UI] No audio level updates received in the last 3 seconds'); // VERBOSE - handled in component
 
                         // Update UI to show warning
                         const audioMeter = document.getElementById('audio-meter');

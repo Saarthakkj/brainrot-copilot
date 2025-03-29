@@ -46,12 +46,12 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
             if (isListening) {
                 if (timeSinceUpdate > 10000) {
                     // Critical problem - no updates for 10+ seconds
-                    console.error('[UI] No audio level updates received in the last 10 seconds');
+                    console.error('[UI] No audio updates received in the last 10 seconds');
                     setAudioStatus('error');
                     setNoAudioTime(timeSinceUpdate);
                 } else if (timeSinceUpdate > 3000) {
                     // Warning level - no updates for 3+ seconds
-                    console.warn('[UI] No audio level updates received in the last 3 seconds');
+                    console.warn('[UI] Audio updates seem delayed ( > 3s )');
                     setAudioStatus('warning');
                     setNoAudioTime(timeSinceUpdate);
                 }

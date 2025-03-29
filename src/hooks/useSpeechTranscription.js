@@ -55,25 +55,25 @@ export const useSpeechTranscription = (apiKey) => {
 
             // Set up event listeners for transcription
             clientRef.current.addEventListener('receiveMessage', ({ data }) => {
-                console.log('[DEBUG] Received Speechmatics message:', data.message);
+                // console.log('[DEBUG] Received Speechmatics message:', data.message); // DEBUG
 
                 if (data.message === 'AddPartialTranscript') {
-                    console.log('[DEBUG] AddPartialTranscript full data:', JSON.stringify(data));
+                    // console.log('[DEBUG] AddPartialTranscript full data:', JSON.stringify(data)); // DEBUG
                     const partialText = data.results
                         .map((r) => r.alternatives?.[0]?.content || '')
                         .join(' ');
                     setPartialTranscript(partialText);
-                    console.log(`[PARTIAL] ${partialText}`);
+                    // console.log(`[PARTIAL] ${partialText}`); // VERBOSE
                 } else if (data.message === 'AddTranscript') {
-                    console.log('[DEBUG] AddTranscript full data:', JSON.stringify(data));
+                    // console.log('[DEBUG] AddTranscript full data:', JSON.stringify(data)); // DEBUG
                     const text = data.results
                         .map((r) => r.alternatives?.[0]?.content || '')
                         .join(' ');
                     setTranscript(prev => prev + ' ' + text);
                     setPartialTranscript('');
-                    console.log(`[FINAL] ${text}`);
+                    // console.log(`[FINAL] ${text}`); // Keep final transcripts - REMOVED
                 } else if (data.message === 'EndOfTranscript') {
-                    console.log('[END] End of transcript received');
+                    console.log('[INFO] End of transcript received');
                 } else if (data.message === 'Error') {
                     console.error('[ERROR] Speechmatics error:', data.error);
                     console.error('[ERROR] Full error data:', JSON.stringify(data));
@@ -81,7 +81,7 @@ export const useSpeechTranscription = (apiKey) => {
                 } else if (data.message === 'Warning') {
                     console.warn('[WARNING] Speechmatics warning:', data);
                 } else {
-                    console.log('[INFO] Speechmatics message:', data.message, data);
+                    // console.log('[INFO] Speechmatics message:', data.message, data); // VERBOSE
                 }
             });
 
@@ -102,11 +102,12 @@ export const useSpeechTranscription = (apiKey) => {
             // Get JWT token
             const jwt = await fetchJWT(apiKey);
 
-            // Start the client with JWT
+            // Start the client with JWT using the 'standard' operating point for speed
             await clientRef.current.start(jwt, {
                 transcription_config: {
                     language: 'en',
                     enable_partials: true,
+                    operating_point: 'standard' // Use standard model for faster speed
                 },
                 audio_format: {
                     type: 'raw',
@@ -115,7 +116,7 @@ export const useSpeechTranscription = (apiKey) => {
                 }
             });
 
-            console.log('[CONFIG] Speechmatics started with sample rate:', AUDIO_SAMPLE_RATE);
+            console.log('[CONFIG] Speechmatics started with sample rate:', AUDIO_SAMPLE_RATE, 'and operating point: standard');
 
             // Set up message listener for audio data
             setupAudioMessageListener();
@@ -215,7 +216,7 @@ export const useSpeechTranscription = (apiKey) => {
         let packetCount = 0;
         let audioSampleCount = 0;
         let lastLogTime = Date.now();
-        const LOG_INTERVAL = 2000; // Log every 2 seconds
+        const LOG_INTERVAL = 5000; // Log stats less frequently (every 5 seconds)
 
         const messageListener = (message, sender, sendResponse) => {
             if (message.type === 'audio-data' && clientRef.current) {
@@ -245,13 +246,10 @@ export const useSpeechTranscription = (apiKey) => {
                     // Log stats periodically
                     const now = Date.now();
                     if (now - lastLogTime > LOG_INTERVAL) {
-                        // Count non-silent samples
                         const nonSilentSamples = boostedData.filter(x => Math.abs(x) > 0.01).length;
                         const percentAudible = (nonSilentSamples / boostedData.length * 100).toFixed(1);
-
-                        console.log(`[AUDIO STATS] Packets: ${packetCount}, Samples: ${audioSampleCount}, ` +
-                            `RMS: ${rms.toFixed(4)}, dB: ${dbFS.toFixed(1)} dBFS, ` +
-                            `Audible: ${percentAudible}%, Has audio: ${hasAudio}`);
+                        // Less verbose stats logging
+                        console.log(`[AUDIO STATS] Packets/s: ${(packetCount / (LOG_INTERVAL / 1000)).toFixed(1)}, Samples/s: ${(audioSampleCount / (LOG_INTERVAL / 1000)).toFixed(0)}, RMS: ${rms.toFixed(4)}, Audible: ${percentAudible}%`);
 
                         lastLogTime = now;
                         packetCount = 0;
@@ -262,20 +260,14 @@ export const useSpeechTranscription = (apiKey) => {
                     if (!hasAudio) {
                         silenceCountRef.current++;
 
-                        // If too many consecutive silence frames, send one and then skip some
-                        if (silenceCountRef.current > 30) { // about 600ms of silence
-                            if (silenceCountRef.current % 5 !== 0) { // Send every 5th silent frame
+                        if (silenceCountRef.current > 30) {
+                            if (silenceCountRef.current % 5 !== 0) {
                                 if (sendResponse) sendResponse({ success: true });
                                 return true;
                             }
                         }
                     } else {
                         silenceCountRef.current = 0;
-                    }
-
-                    // Strong audio detection logging
-                    if (hasAudio && rms > 0.05) {
-                        console.log(`[AUDIO DETECTED] Strong audio signal: ${rms.toFixed(4)}, dB: ${dbFS.toFixed(1)}`);
                     }
 
                     // Store the last audio data
