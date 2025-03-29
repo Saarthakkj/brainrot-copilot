@@ -33,7 +33,7 @@
 }
 
 .content {
-    @apply w-full h-full flex flex-col relative bg-gradient-to-br from-[#1a2a6c] via-[#b21f1f] to-[#fdbb2d];
+    @apply w-full h-full flex flex-col relative bg-white;
 }
 
 .status-bar {
@@ -88,4 +88,25 @@
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
     @apply bg-white/30 rounded hover:bg-white/50;
+}
+
+/* Add TikTok-like caption styles */
+.tiktok-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Text shadow effect for better visibility */
+.tiktok-container h1 {
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Add animation to the captions */
+@keyframes captionFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tiktok-container h1 {
+  animation: captionFadeIn 0.3s ease-out;
 } 

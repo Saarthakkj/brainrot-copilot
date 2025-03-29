@@ -6,6 +6,44 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
     const [lastAudioUpdate, setLastAudioUpdate] = useState(Date.now());
     const [audioStatus, setAudioStatus] = useState('waiting'); // 'waiting', 'active', 'warning', 'error'
     const [noAudioTime, setNoAudioTime] = useState(0);
+    const [lastWords, setLastWords] = useState('');
+    const [displayedText, setDisplayedText] = useState('');
+    const lastUpdateRef = useRef(Date.now());
+
+    // Improved word extraction with smooth transitions
+    useEffect(() => {
+        const extractLastWords = () => {
+            // Get the most recent text, prioritizing partial if it exists
+            const currentText = partialTranscript || transcript || '';
+
+            // Don't update if the change was too recent (prevents flickering)
+            const now = Date.now();
+            if (now - lastUpdateRef.current < 200) {
+                return;
+            }
+
+            // Split into words and get the last few
+            const words = currentText.trim().split(/\s+/);
+
+            // If we have a partial transcript, show more words for context
+            const numWordsToShow = partialTranscript ? 3 : 2;
+            let relevantWords = words.slice(-numWordsToShow).join(' ');
+
+            // Remove punctuation
+            relevantWords = relevantWords.replace(/[.,!?;:]/g, '');
+
+            // Convert to uppercase
+            relevantWords = relevantWords.toUpperCase();
+
+            // Only update if the text has actually changed
+            if (relevantWords !== displayedText) {
+                setDisplayedText(relevantWords);
+                lastUpdateRef.current = now;
+            }
+        };
+
+        extractLastWords();
+    }, [transcript, partialTranscript]);
 
     // Auto-scroll to the bottom when transcript changes
     useEffect(() => {
@@ -88,68 +126,46 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
     };
 
     return (
-        <div className="w-full h-full flex flex-col px-4">
+        <div className="w-full h-full flex flex-col">
+            {/* Small audio meter at the top */}
             {isListening && (
-                <div className="w-full mb-4 p-2 bg-gray-800 rounded border border-gray-700">
+                <div className="w-full px-2 mb-2">
                     <div className="flex items-center">
-                        <div className="text-sm text-white mr-2 min-w-[100px]">Audio: {audioLevel.toFixed(0)}%</div>
-                        <div className="flex-1 bg-gray-900 h-6 rounded-full overflow-hidden border border-gray-700" id="audio-meter">
+                        <div className="flex-1 bg-gray-900 h-2 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-100 ${getBarColor(audioLevel, audioStatus)}`}
                                 style={{ width: `${Math.max(1, audioLevel)}%` }}
+                                id="audio-meter"
                             />
                         </div>
                     </div>
-
-                    {getAudioStatusMessage() && (
-                        <div className={`text-sm mt-1 ${audioStatus === 'error' ? 'text-red-400' : audioStatus === 'warning' ? 'text-yellow-400' : 'text-gray-300'}`}>
-                            {getAudioStatusMessage()}
-                        </div>
-                    )}
-
-                    {audioStatus === 'error' && (
-                        <div className="mt-2 bg-red-900/50 p-2 rounded text-xs text-white">
-                            <p className="font-bold">Troubleshooting steps:</p>
-                            <ol className="list-decimal pl-4 mt-1 space-y-1">
-                                <li>Make sure the tab is playing audio.</li>
-                                <li>Try refreshing the page.</li>
-                                <li>Restart the extension by clicking the icon again.</li>
-                                <li>Check console for errors (F12 → Console).</li>
-                            </ol>
-                        </div>
-                    )}
                 </div>
             )}
-            <div className="w-full flex-1">
+
+            {/* TikTok-style caption container */}
+            <div className="flex-1 relative w-full">
                 <div
+                    className="absolute inset-0 flex items-center justify-center"
                     ref={transcriptContainerRef}
-                    className="bg-gray-900 rounded-lg p-4 h-[60vh] overflow-y-auto text-white mb-2"
                 >
-                    {transcript && (
-                        <div className="mb-2 text-base font-semibold">
-                            {transcript}
+                    {displayedText ? (
+                        <div className="w-full px-4">
+                            <div className="px-6 py-4 rounded-xl text-center max-w-full mx-auto">
+                                <h1 className="text-white text-2xl font-extrabold leading-tight tracking-tight break-words transition-all duration-300 uppercase">
+                                    {displayedText || '...'}
+                                </h1>
+                            </div>
                         </div>
-                    )}
-                    {partialTranscript && (
-                        <div className="text-gray-300 italic">
-                            {partialTranscript}
-                        </div>
-                    )}
-                    {isEmptyTranscript && isListening && (
-                        <div className="text-yellow-400 italic text-center mt-20 border border-yellow-500 p-4 rounded">
-                            <p className="font-semibold mb-2">Waiting for speech...</p>
-                            <p className="text-sm">
-                                Make sure your browser tab is playing audio. Try speaking loudly or playing audio with speech.
-                            </p>
-                            <p className="text-sm mt-2">
-                                Check the console logs for "[AUDIO LEVELS]" and "[AUDIO STATS]" to verify audio is being captured.
-                            </p>
-                        </div>
-                    )}
-                    {!isListening && isEmptyTranscript && (
-                        <div className="text-gray-400 text-center mt-20">
-                            Press Start to begin transcription
-                        </div>
+                    ) : (
+                        isListening ? (
+                            <div className="text-center rounded-xl px-6 py-4">
+                                <p className="text-white text-3xl font-bold uppercase">LISTENING...</p>
+                            </div>
+                        ) : (
+                            <div className="text-center rounded-xl px-6 py-4">
+                                <p className="text-gray-200 text-2xl font-bold uppercase">TRANSCRIPTION OFF</p>
+                            </div>
+                        )
                     )}
                 </div>
             </div>

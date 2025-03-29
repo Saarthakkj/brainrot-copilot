@@ -3,7 +3,6 @@ import { useDrag } from '../hooks/useDrag';
 import { calculateDimensions } from '../utils/dimensions';
 import { useSpeechTranscription } from '../hooks/useSpeechTranscription';
 import TranscriptionDisplay from './TranscriptionDisplay';
-import TranscriptionControls from './TranscriptionControls';
 import '../styles.css';
 
 const SPEECHMATICS_API_KEY = 'A7kaNtIVHCMxsCBIQYkMlzQN7A2njKLY';
@@ -64,6 +63,15 @@ const Overlay = () => {
         };
     }, []);
 
+    // Double click to toggle transcription
+    const handleDoubleClick = () => {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    };
+
     const timeStr = time.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
@@ -86,6 +94,7 @@ const Overlay = () => {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onDoubleClick={handleDoubleClick}
         >
             <div className="notch" />
             <div className="volume-button volume-up" />
@@ -101,22 +110,23 @@ const Overlay = () => {
                 </div>
 
                 <div className="app-content">
-                    <div className="text-center py-4">
-                        <h2 className="text-xl font-bold text-white">Live Transcription</h2>
+                    <div className="text-center py-2">
+                        <h2 className="text-sm font-bold text-white">
+                            {isListening ? "📝 Live Captions" : "Double-click to start"}
+                        </h2>
                     </div>
 
-                    <TranscriptionDisplay
-                        transcript={transcript}
-                        partialTranscript={partialTranscript}
-                        isListening={isListening}
-                    />
+                    <div className="tiktok-container flex-1 flex flex-col bg-gradient-to-br from-purple-900 to-pink-600">
+                        {error && (
+                            <div className="bg-red-800 text-white p-1 text-xs rounded-md m-2 text-center">
+                                Error: {error}
+                            </div>
+                        )}
 
-                    <div className="mt-2">
-                        <TranscriptionControls
+                        <TranscriptionDisplay
+                            transcript={transcript}
+                            partialTranscript={partialTranscript}
                             isListening={isListening}
-                            startListening={startListening}
-                            stopListening={stopListening}
-                            error={error}
                         />
                     </div>
                 </div>
