@@ -15,7 +15,7 @@
 }
 
 .notch {
-    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[30px] rounded-b-[14px] z-[2];
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[45%] h-[23px] rounded-b-[14px] z-[2];
     background-color: black !important;
 }
 
@@ -124,36 +124,10 @@
 }
 
 .transcription-toggle {
-    @apply flex items-center bg-black/40 backdrop-blur px-3 py-1.5 rounded-full;
+    @apply flex items-center justify-end bg-black/40 backdrop-blur px-4 py-2 rounded-full gap-3;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.toggle-switch {
-    @apply relative inline-block w-10 h-5 mx-2;
-}
-
-.toggle-switch input {
-    @apply opacity-0 w-0 h-0;
-}
-
-.toggle-slider {
-    @apply absolute cursor-pointer inset-0 bg-gray-700 rounded-full;
-    transition: background-color 0.1s ease;
-}
-
-.toggle-slider:before {
-    @apply content-[''] absolute h-4 w-4 left-0.5 bottom-0.5 bg-white rounded-full;
-    transition: transform 0.1s ease;
-}
-
-input:checked + .toggle-slider {
-    @apply bg-blue-500;
-}
-
-input:checked + .toggle-slider:before {
-    @apply translate-x-5;
-}
-
 .toggle-label {
-    @apply text-white text-xs font-medium;
+    @apply text-white text-sm font-medium;
 } 

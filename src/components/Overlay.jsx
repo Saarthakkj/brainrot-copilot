@@ -4,6 +4,7 @@ import { calculateDimensions } from '../utils/dimensions';
 import { useSpeechTranscription } from '../hooks/useSpeechTranscription';
 import TranscriptionDisplay from './TranscriptionDisplay';
 import '../styles.css';
+import { Switch } from './ui/Switch';
 
 const SPEECHMATICS_API_KEY = 'A7kaNtIVHCMxsCBIQYkMlzQN7A2njKLY';
 
@@ -114,14 +115,6 @@ const Overlay = () => {
             <div className="volume-button volume-down" />
             <div className="power-button" />
             <div className="content">
-                <div className="status-bar">
-                    <div>{timeStr}</div>
-                    <div className="status-icons">
-                        <span>📶</span>
-                        <span>🔋</span>
-                    </div>
-                </div>
-
                 <div className="app-content">
                     <div className="tiktok-container">
                         <video
@@ -152,18 +145,12 @@ const Overlay = () => {
                 <div className="transcription-toggle-container">
                     <div className="transcription-toggle">
                         <span className="toggle-label">Captions</span>
-                        <label className="toggle-switch">
-                            <input
-                                type="checkbox"
-                                checked={showCaptions}
-                                onChange={handleToggleTranscription}
-                            />
-                            <span className="toggle-slider"></span>
-                        </label>
+                        <Switch
+                            checked={showCaptions}
+                            onCheckedChange={handleToggleTranscription}
+                        />
                     </div>
                 </div>
-
-                <div className="home-indicator" />
             </div>
         </div>
     );
