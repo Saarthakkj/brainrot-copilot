@@ -5,6 +5,8 @@ import { RealtimeClient } from '@speechmatics/real-time-client';
 const AUDIO_SAMPLE_RATE = 48000;
 // Add a gain factor to boost audio levels
 const AUDIO_GAIN = 3.0;
+// Timeout in ms to hide transcript when no new text is received
+const TRANSCRIPT_HIDE_TIMEOUT = 2000;
 
 export const useSpeechTranscription = (apiKey) => {
     const [isListening, setIsListening] = useState(false);
@@ -12,32 +14,76 @@ export const useSpeechTranscription = (apiKey) => {
     const [partialTranscript, setPartialTranscript] = useState('');
     const [error, setError] = useState(null);
     const [audioLevel, setAudioLevel] = useState(0);
+    const [showTranscript, setShowTranscript] = useState(true);
 
     const clientRef = useRef(null);
     const messageListenerRef = useRef(null);
+    const timeoutRef = useRef(null);
+    const lastTranscriptRef = useRef(''); // To track the last significant transcript content
 
     // Add new refs for audio processing
     const lastAudioDataRef = useRef(null);
     const silenceCountRef = useRef(0);
 
-    const fetchJWT = async (apiKey) => {
-        const response = await fetch('https://mp.speechmatics.com/v1/api_keys?type=rt', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                ttl: 3600,
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Bad response from API', { cause: response });
+    // Function to reset the hide timeout
+    const resetHideTimeout = (newContent) => {
+        // Only reset if we have genuinely new content
+        if (newContent && newContent === lastTranscriptRef.current) {
+            return; // Skip if same content
         }
 
-        const data = await response.json();
-        return data.key_value;
+        // Update our reference to the latest content
+        if (newContent) {
+            lastTranscriptRef.current = newContent;
+        }
+
+        // Clear any existing timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        // Show the transcript
+        setShowTranscript(true);
+
+        // Set a new timeout to hide it
+        timeoutRef.current = setTimeout(() => {
+            setShowTranscript(false);
+        }, TRANSCRIPT_HIDE_TIMEOUT);
+    };
+
+    const fetchJWT = async (apiKey) => {
+        try {
+            console.log('[INFO] Fetching JWT with API key');
+            const response = await fetch('https://mp.speechmatics.com/v1/api_keys?type=rt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    ttl: 3600,
+                }),
+            });
+
+            if (!response.ok) {
+                // Extract more detailed error message if available
+                let errorMessage = 'Invalid API key or service unavailable';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.detail || errorData.message || errorMessage;
+                } catch (e) {
+                    // If we can't parse the error JSON, stick with the default message
+                }
+
+                throw new Error(errorMessage, { cause: response });
+            }
+
+            const data = await response.json();
+            return data.key_value;
+        } catch (error) {
+            console.error('[ERROR] JWT fetch failed:', error);
+            throw new Error('Failed to authenticate: ' + error.message);
+        }
     };
 
     const startListening = async () => {
@@ -49,6 +95,17 @@ export const useSpeechTranscription = (apiKey) => {
             setError(null);
             setTranscript('');
             setPartialTranscript('');
+            lastTranscriptRef.current = ''; // Reset the last transcript reference
+
+            // Check API key validity by fetching a JWT
+            let jwt;
+            try {
+                jwt = await fetchJWT(apiKey);
+            } catch (err) {
+                console.error('[ERROR] JWT fetch failed with error:', err);
+                setError('Invalid API key: ' + err.message);
+                throw new Error('API key validation failed: ' + err.message);
+            }
 
             // Initialize Speechmatics client
             clientRef.current = new RealtimeClient();
@@ -62,6 +119,11 @@ export const useSpeechTranscription = (apiKey) => {
                     const partialText = data.results
                         .map((r) => r.alternatives?.[0]?.content || '')
                         .join(' ');
+
+                    // Extract significant words for comparison
+                    const words = partialText.trim().split(/\s+/);
+                    const significantContent = words.slice(-2).join(' '); // Last 2 words
+
                     setPartialTranscript(partialText);
                     // Also add partial text to the transcript to create a continuous flow
                     setTranscript(prev => {
@@ -73,6 +135,10 @@ export const useSpeechTranscription = (apiKey) => {
                         }
                         return prev;
                     });
+
+                    // Reset the hide timeout whenever genuinely new text is received
+                    resetHideTimeout(significantContent);
+
                     // console.log(`[PARTIAL] ${partialText}`); // VERBOSE
                 } else if (data.message === 'AddTranscript') {
                     // Skip processing final transcripts to avoid repeating words
@@ -104,9 +170,6 @@ export const useSpeechTranscription = (apiKey) => {
                 console.error('[ERROR] Speechmatics connection error:', error);
                 setError('Connection error: ' + (error.message || 'Unknown error'));
             });
-
-            // Get JWT token
-            const jwt = await fetchJWT(apiKey);
 
             // Start the client with JWT using the 'standard' operating point for speed
             await clientRef.current.start(jwt, {
@@ -174,6 +237,16 @@ export const useSpeechTranscription = (apiKey) => {
                 chrome.runtime.onMessage.removeListener(messageListenerRef.current);
                 messageListenerRef.current = null;
             }
+
+            // Clear the hide timeout
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
+            // Reset transcript tracking
+            lastTranscriptRef.current = '';
+            setShowTranscript(false);
 
             // Reset audio processing state
             lastAudioDataRef.current = null;
@@ -266,6 +339,15 @@ export const useSpeechTranscription = (apiKey) => {
                     if (!hasAudio) {
                         silenceCountRef.current++;
 
+                        // After about 1 second of silence (depends on packet rate), hide transcript
+                        if (silenceCountRef.current > 10 && showTranscript) {
+                            setShowTranscript(false);
+                            if (timeoutRef.current) {
+                                clearTimeout(timeoutRef.current);
+                                timeoutRef.current = null;
+                            }
+                        }
+
                         if (silenceCountRef.current > 30) {
                             if (silenceCountRef.current % 5 !== 0) {
                                 if (sendResponse) sendResponse({ success: true });
@@ -302,6 +384,11 @@ export const useSpeechTranscription = (apiKey) => {
     // Clean up on unmount
     useEffect(() => {
         return () => {
+            // Clear the hide timeout
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
             stopListening();
         };
     }, []);
@@ -312,6 +399,7 @@ export const useSpeechTranscription = (apiKey) => {
         partialTranscript,
         error,
         audioLevel,
+        showTranscript,
         startListening,
         stopListening
     };

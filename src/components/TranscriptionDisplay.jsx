@@ -1,12 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 
-const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) => {
+// Use memo to prevent unnecessary re-renders
+const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening, showTranscript = true }) => {
     const transcriptContainerRef = useRef(null);
     const [displayedText, setDisplayedText] = useState('');
     const lastUpdateRef = useRef(Date.now());
 
     // Improved word extraction with smooth transitions
     useEffect(() => {
+        // If not showing transcript at all, don't process anything
+        if (!showTranscript) {
+            setDisplayedText('');
+            return;
+        }
+
         const extractLastWords = () => {
             // If not listening, clear displayed text immediately
             if (!isListening) {
@@ -44,7 +51,7 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
         };
 
         extractLastWords();
-    }, [transcript, partialTranscript, isListening]);
+    }, [transcript, partialTranscript, isListening, showTranscript, displayedText]);
 
     // Auto-scroll to the bottom when transcript changes
     useEffect(() => {
@@ -52,6 +59,11 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
             transcriptContainerRef.current.scrollTop = transcriptContainerRef.current.scrollHeight;
         }
     }, [transcript, partialTranscript]);
+
+    // Completely hide component if not showing transcript
+    if (!showTranscript || !isListening) {
+        return null;
+    }
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -61,25 +73,25 @@ const TranscriptionDisplay = ({ transcript, partialTranscript, isListening }) =>
                     className="absolute inset-0 flex items-center justify-center"
                     ref={transcriptContainerRef}
                 >
-                    {isListening && (
-                        displayedText ? (
-                            <div className="w-full px-4">
-                                <div className="px-6 py-4 rounded-xl text-center max-w-full mx-auto">
-                                    <h1 className="text-white text-2xl font-extrabold leading-tight tracking-tight break-words transition-all duration-300 uppercase">
-                                        {displayedText}
-                                    </h1>
-                                </div>
+                    {displayedText ? (
+                        <div className="w-full px-4">
+                            <div className="px-6 py-4 rounded-xl text-center max-w-full mx-auto">
+                                <h1
+                                    className="text-white text-2xl font-extrabold leading-tight tracking-tight break-words uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
+                                >
+                                    {displayedText}
+                                </h1>
                             </div>
-                        ) : (
-                            <div className="text-center rounded-xl px-6 py-4">
-                                <p className="text-white text-3xl font-bold uppercase">LISTENING...</p>
-                            </div>
-                        )
+                        </div>
+                    ) : (
+                        <div className="text-center rounded-xl px-6 py-4">
+                            <p className="text-white text-3xl font-bold uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">LISTENING...</p>
+                        </div>
                     )}
                 </div>
             </div>
         </div>
     );
-};
+});
 
 export default TranscriptionDisplay; 
