@@ -12,6 +12,7 @@ const Overlay = () => {
     const [time, setTime] = useState(new Date());
     const { isDragging, handleMouseDown, handleMouseMove, handleMouseUp } = useDrag(overlayRef);
     const { width, height } = calculateDimensions();
+    const [showCaptions, setShowCaptions] = useState(true);
 
     const {
         isListening,
@@ -72,6 +73,19 @@ const Overlay = () => {
         }
     };
 
+    // Toggle transcription on/off with immediate UI feedback
+    const handleToggleTranscription = () => {
+        // Update UI state immediately
+        setShowCaptions(!showCaptions);
+
+        // Handle actual transcription service in the background
+        if (showCaptions) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    };
+
     const timeStr = time.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
@@ -90,7 +104,6 @@ const Overlay = () => {
                 top: '20px',
                 zIndex: 999999
             }}
-            className={`bg-black rounded-[44px] shadow-lg select-none flex flex-col pointer-events-auto overflow-hidden border-[10px] border-black ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -110,24 +123,43 @@ const Overlay = () => {
                 </div>
 
                 <div className="app-content">
-                    <div className="text-center py-2">
-                        <h2 className="text-sm font-bold text-white">
-                            {isListening ? "📝 Live Captions" : "Double-click to start"}
-                        </h2>
-                    </div>
-
-                    <div className="tiktok-container flex-1 flex flex-col bg-gradient-to-br from-purple-900 to-pink-600">
-                        {error && (
-                            <div className="bg-red-800 text-white p-1 text-xs rounded-md m-2 text-center">
-                                Error: {error}
-                            </div>
-                        )}
-
-                        <TranscriptionDisplay
-                            transcript={transcript}
-                            partialTranscript={partialTranscript}
-                            isListening={isListening}
+                    <div className="tiktok-container">
+                        <video
+                            src={chrome.runtime.getURL("videos/subway-surfers.mp4")}
+                            autoPlay
+                            loop
+                            muted
+                            className="absolute inset-0 w-full h-full object-cover"
                         />
+
+                        <div className="relative z-10 flex flex-col flex-1 p-3">
+                            {error && (
+                                <div className="bg-red-800 text-white p-1 text-xs rounded-md m-2 text-center">
+                                    Error: {error}
+                                </div>
+                            )}
+
+                            <TranscriptionDisplay
+                                transcript={transcript}
+                                partialTranscript={partialTranscript}
+                                isListening={showCaptions && isListening}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Transcription Toggle */}
+                <div className="transcription-toggle-container">
+                    <div className="transcription-toggle">
+                        <span className="toggle-label">Captions</span>
+                        <label className="toggle-switch">
+                            <input
+                                type="checkbox"
+                                checked={showCaptions}
+                                onChange={handleToggleTranscription}
+                            />
+                            <span className="toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
 

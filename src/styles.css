@@ -9,15 +9,19 @@
 }
 
 #tab-capture-overlay {
-    @apply fixed left-5 top-5 bg-black rounded-[44px] shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-[999999] overflow-hidden border-[10px] border-black;
+    @apply fixed left-5 top-5 shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-[999999] overflow-hidden rounded-[44px];
+    border: 8px solid black !important;
+    background-color: black !important;
 }
 
 .notch {
-    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[30px] bg-black rounded-b-[14px] z-max-plus;
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[30px] rounded-b-[14px] z-[2];
+    background-color: black !important;
 }
 
 .volume-button {
-    @apply absolute -left-[12px] w-1 bg-[#222] rounded-[2px] z-max-plus;
+    @apply absolute -left-[12px] w-1 rounded-[2px] z-max-plus;
+    background-color: #222 !important;
 }
 
 .volume-up {
@@ -29,19 +33,23 @@
 }
 
 .power-button {
-    @apply absolute -right-[12px] top-[120px] w-1 h-[60px] bg-[#222] rounded-[2px] z-max-plus;
+    @apply absolute -right-[12px] top-[120px] w-1 h-[60px] rounded-[2px] z-max-plus;
+    background-color: #222 !important;
 }
 
 .content {
-    @apply w-full h-full flex flex-col relative bg-white;
+    @apply w-full h-full flex flex-col relative overflow-hidden rounded-[34px];
+    background-color: black !important;
 }
 
 .status-bar {
-    @apply flex justify-between px-4 py-1 text-white text-xs font-bold h-6 bg-black/20 backdrop-blur;
+    @apply flex justify-between px-8 text-white font-bold h-[30px] items-center bg-black/20 backdrop-blur z-[1];
+    font-size: 11px !important;
 }
 
 .status-icons {
-    @apply flex gap-1;
+    @apply flex gap-2;
+    font-size: 12px !important;
 }
 
 .app-grid {
@@ -70,7 +78,7 @@
 
 /* Transcription styles */
 .app-content {
-    @apply flex-1 flex flex-col p-3;
+    @apply flex-1 flex flex-col;
 }
 
 .transcription-button {
@@ -92,21 +100,60 @@
 
 /* Add TikTok-like caption styles */
 .tiktok-container {
-  position: relative;
-  overflow: hidden;
+    @apply relative overflow-hidden flex-1 flex flex-col -mt-[30px];
 }
 
 /* Text shadow effect for better visibility */
 .tiktok-container h1 {
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Add animation to the captions */
 @keyframes captionFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .tiktok-container h1 {
-  animation: captionFadeIn 0.3s ease-out;
+    animation: captionFadeIn 0.3s ease-out;
+}
+
+/* Transcription toggle styles */
+.transcription-toggle-container {
+    @apply absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center z-10;
+}
+
+.transcription-toggle {
+    @apply flex items-center bg-black/40 backdrop-blur px-3 py-1.5 rounded-full;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toggle-switch {
+    @apply relative inline-block w-10 h-5 mx-2;
+}
+
+.toggle-switch input {
+    @apply opacity-0 w-0 h-0;
+}
+
+.toggle-slider {
+    @apply absolute cursor-pointer inset-0 bg-gray-700 rounded-full;
+    transition: background-color 0.1s ease;
+}
+
+.toggle-slider:before {
+    @apply content-[''] absolute h-4 w-4 left-0.5 bottom-0.5 bg-white rounded-full;
+    transition: transform 0.1s ease;
+}
+
+input:checked + .toggle-slider {
+    @apply bg-blue-500;
+}
+
+input:checked + .toggle-slider:before {
+    @apply translate-x-5;
+}
+
+.toggle-label {
+    @apply text-white text-xs font-medium;
 } 

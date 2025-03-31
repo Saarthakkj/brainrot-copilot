@@ -63,15 +63,21 @@ export const useSpeechTranscription = (apiKey) => {
                         .map((r) => r.alternatives?.[0]?.content || '')
                         .join(' ');
                     setPartialTranscript(partialText);
+                    // Also add partial text to the transcript to create a continuous flow
+                    setTranscript(prev => {
+                        // Only add new words not already in the transcript
+                        const words = partialText.split(' ');
+                        const lastWord = words[words.length - 1];
+                        if (lastWord && !prev.endsWith(lastWord)) {
+                            return prev + ' ' + lastWord;
+                        }
+                        return prev;
+                    });
                     // console.log(`[PARTIAL] ${partialText}`); // VERBOSE
                 } else if (data.message === 'AddTranscript') {
-                    // console.log('[DEBUG] AddTranscript full data:', JSON.stringify(data)); // DEBUG
-                    const text = data.results
-                        .map((r) => r.alternatives?.[0]?.content || '')
-                        .join(' ');
-                    setTranscript(prev => prev + ' ' + text);
-                    setPartialTranscript('');
-                    // console.log(`[FINAL] ${text}`); // Keep final transcripts - REMOVED
+                    // Skip processing final transcripts to avoid repeating words
+                    // We're now relying solely on partial transcripts for the display
+                    console.log('[INFO] Skipping final transcript to avoid repetition');
                 } else if (data.message === 'EndOfTranscript') {
                     console.log('[INFO] End of transcript received');
                 } else if (data.message === 'Error') {
