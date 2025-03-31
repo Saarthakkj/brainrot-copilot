@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Overlay from './src/components/Overlay';
-import PhoneUI from './src/components/PhoneUI';
 
 let overlayRoot = null;
 
@@ -14,18 +13,8 @@ document.body.appendChild(overlayContainer);
 const height = window.innerHeight * 0.7;
 const width = height * (9 / 19.5); // iPhone aspect ratio
 
-// App icons data
-const apps = [
-    { name: 'Fortnite', icon: 'icons/fortnite.png' },
-    { name: 'Rocket League', icon: 'icons/rocket-league.png' },
-    { name: 'Minecraft', icon: 'icons/minecraft.png' },
-    { name: 'Slime', icon: 'icons/slime.png' },
-    { name: 'Subway Surfers', icon: 'icons/subway-surfers.png' }
-];
-
 // Main App component
 const App = () => {
-    const [showPhoneUI, setShowPhoneUI] = useState(false);
     const [audioLevelData, setAudioLevelData] = useState({
         level: 0,
         warning: false,
@@ -59,47 +48,30 @@ const App = () => {
 
         // Watch for custom fullscreen implementations
         const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (
-                    mutation.type === "attributes" &&
-                    mutation.attributeName === "style"
-                ) {
-                    const target = mutation.target;
-                    if (
-                        target.style.position === "fixed" &&
-                        target.style.top === "0px" &&
-                        target.style.left === "0px" &&
-                        target.style.width === "100%" &&
-                        target.style.height === "100%" &&
-                        target.style.zIndex &&
-                        parseInt(target.style.zIndex) > 1000
-                    ) {
-                        const container = document.createElement("div");
-                        container.id = 'tab-capture-overlay-container';
-                        container.style.display = "block";
-                        container.style.opacity = "1";
-                        target.appendChild(container);
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const overlay = document.getElementById('tab-capture-overlay');
+                    if (!overlay) return;
 
-                        // Move overlay to the new container
-                        const overlay = document.getElementById('tab-capture-overlay');
-                        if (overlay) {
-                            container.appendChild(overlay);
-                        }
+                    const isFullscreen = document.documentElement.classList.contains('fullscreen') ||
+                        document.documentElement.classList.contains('fullscreen-mode');
+
+                    if (isFullscreen) {
+                        document.documentElement.appendChild(overlay);
+                    } else {
+                        overlayContainer.appendChild(overlay);
                     }
                 }
-            }
+            });
         });
 
         observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
             attributes: true,
-            attributeFilter: ["style", "class"],
+            attributeFilter: ['class']
         });
 
-        // Set up audio monitoring interval
-        let audioMonitorInterval = null;
-
+        // Monitor audio level updates
+        let audioMonitorInterval;
         if (audioLevelData.lastUpdateTime) {
             audioMonitorInterval = setInterval(() => {
                 const now = Date.now();
@@ -148,17 +120,7 @@ const App = () => {
         };
     }, [audioLevelData.lastUpdateTime]);
 
-    // Handle content choice
-    return showPhoneUI ? (
-        <PhoneUI
-            width={width}
-            height={height}
-            apps={apps}
-            audioLevelData={audioLevelData}
-        />
-    ) : (
-        <Overlay />
-    );
+    return <Overlay />;
 };
 
 // Listen for messages from the service worker
@@ -223,10 +185,5 @@ function hideOverlay() {
     if (overlayRoot) {
         overlayRoot.unmount();
         overlayRoot = null;
-        window.updateAudioLevel = null;
-    }
-    const container = document.getElementById('tab-capture-overlay-container');
-    if (container) {
-        container.remove();
     }
 } 
