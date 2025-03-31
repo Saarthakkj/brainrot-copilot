@@ -67,7 +67,7 @@ const PhoneUI = ({ width, height, apps, audioLevelData }) => {
             className="fixed left-5 top-5 bg-black rounded-[44px] shadow-lg cursor-grab select-none flex flex-col pointer-events-auto z-max overflow-hidden border-[10px] border-black"
         >
             {/* iPhone notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[30px] bg-black rounded-b-[14px] z-max-plus" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[25px] bg-black rounded-b-[14px] z-max-plus" />
 
             {/* Volume buttons */}
             <div className="absolute -left-[12px] top-[100px] w-1 h-[50px] bg-[#222] rounded-[2px] z-max-plus" />

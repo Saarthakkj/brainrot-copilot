@@ -17,6 +17,7 @@ const Overlay = () => {
     const [apiKey, setApiKey] = useState('');
     const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
     const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
+    const [error, setError] = useState(null);
 
     // Define videos for the swiper
     const videos = [
@@ -28,7 +29,7 @@ const Overlay = () => {
         isListening,
         transcript,
         partialTranscript,
-        error,
+        error: transcriptionError,
         audioLevel,
         showTranscript,
         startListening,
@@ -167,8 +168,16 @@ const Overlay = () => {
 
                         <div className="relative z-10 flex flex-col flex-1 p-3">
                             {error && (
-                                <div className="bg-red-800 text-white p-1 text-xs rounded-md m-2 text-center">
-                                    Error: {error}
+                                <div className="bg-red-800/90 text-white p-2 text-sm rounded-md m-2 text-center flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <span className="font-medium">Error:</span> {error}
+                                    </div>
+                                    <button
+                                        onClick={() => setError(null)}
+                                        className="ml-2 text-white/70 hover:text-white"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
                             )}
 

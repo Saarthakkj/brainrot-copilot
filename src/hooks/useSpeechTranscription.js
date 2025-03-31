@@ -70,7 +70,15 @@ export const useSpeechTranscription = (apiKey) => {
                 let errorMessage = 'Invalid API key or service unavailable';
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.detail || errorData.message || errorMessage;
+                    if (response.status === 401) {
+                        errorMessage = 'Invalid API key. Please check your Speechmatics API key and try again.';
+                    } else if (response.status === 403) {
+                        errorMessage = 'Access denied. Your API key may have expired or have insufficient permissions.';
+                    } else if (response.status === 429) {
+                        errorMessage = 'Too many requests. Please wait a moment and try again.';
+                    } else {
+                        errorMessage = errorData.detail || errorData.message || errorMessage;
+                    }
                 } catch (e) {
                     // If we can't parse the error JSON, stick with the default message
                 }
@@ -82,7 +90,7 @@ export const useSpeechTranscription = (apiKey) => {
             return data.key_value;
         } catch (error) {
             console.error('[ERROR] JWT fetch failed:', error);
-            throw new Error('Failed to authenticate: ' + error.message);
+            throw new Error(error.message || 'Failed to authenticate with Speechmatics');
         }
     };
 
@@ -149,7 +157,18 @@ export const useSpeechTranscription = (apiKey) => {
                 } else if (data.message === 'Error') {
                     console.error('[ERROR] Speechmatics error:', data.error);
                     console.error('[ERROR] Full error data:', JSON.stringify(data));
-                    setError(data.error || 'Unknown error occurred');
+                    let errorMessage = data.error || 'Unknown error occurred';
+
+                    // Make error messages more user-friendly
+                    if (errorMessage.includes('language')) {
+                        errorMessage = 'Language detection failed. Please try speaking again.';
+                    } else if (errorMessage.includes('audio')) {
+                        errorMessage = 'Audio processing error. Please check your microphone and try again.';
+                    } else if (errorMessage.includes('quota')) {
+                        errorMessage = 'API quota exceeded. Please try again later.';
+                    }
+
+                    setError(errorMessage);
                 } else if (data.message === 'Warning') {
                     console.warn('[WARNING] Speechmatics warning:', data);
                 } else {
@@ -168,7 +187,13 @@ export const useSpeechTranscription = (apiKey) => {
 
             clientRef.current.addEventListener('error', (error) => {
                 console.error('[ERROR] Speechmatics connection error:', error);
-                setError('Connection error: ' + (error.message || 'Unknown error'));
+                let errorMessage = 'Connection error occurred';
+                if (error.message.includes('WebSocket')) {
+                    errorMessage = 'Connection lost. Please check your internet connection and try again.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Connection timed out. Please try again.';
+                }
+                setError(errorMessage);
             });
 
             // Start the client with JWT using the 'standard' operating point for speed

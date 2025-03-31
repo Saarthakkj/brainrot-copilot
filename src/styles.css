@@ -12,7 +12,7 @@
 /* iPhone-like bezel styling */
 #tab-capture-overlay {
   position: relative;
-  border: 12px solid black;
+  border: 9px solid black;
   border-radius: 44px;
   overflow: hidden;
 }
