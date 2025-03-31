@@ -21,8 +21,13 @@ const Overlay = () => {
 
     // Define videos for the swiper
     const videos = [
-        { src: "videos/subway-surfers.mp4" },
-        { src: "videos/gta-5.mp4" }
+        { src: "videos/gta5.mp4" },
+        { src: "videos/minecraft-1.mp4" },
+        { src: "videos/mobile-games.mp4" },
+        { src: "videos/press.mp4" },
+        { src: "videos/slime.mp4" },
+        { src: "videos/subway-1.mp4" },
+        { src: "videos/subway-2.mp4" }
     ];
 
     const {

@@ -22,8 +22,13 @@
       "resources": [
         "icons/*.png",
         "dist/styles.css",
-        "videos/subway-surfers.mp4",
-        "videos/gta-5.mp4"
+        "videos/gta5.mp4",
+        "videos/minecraft-1.mp4",
+        "videos/mobile-games.mp4",
+        "videos/press.mp4",
+        "videos/slime.mp4",
+        "videos/subway-1.mp4",
+        "videos/subway-2.mp4"
       ],
       "matches": ["<all_urls>"]
     }
