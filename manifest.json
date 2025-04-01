@@ -1,6 +1,6 @@
 {
-  "name": "Attenture",
-  "description": "Records the current tab in an offscreen document.",
+  "name": "Brainrot Copilot",
+  "description": "Overlay brainrot videos with live captions on your current tab.",
   "version": "1",
   "manifest_version": 3,
   "minimum_chrome_version": "116",

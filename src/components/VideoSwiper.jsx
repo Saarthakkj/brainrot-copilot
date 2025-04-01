@@ -4,38 +4,29 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 const VideoSwiper = ({ videos }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const swiperRef = useRef(null);
-    const videoRefs = useRef([]);
 
-    // Set up video refs
-    useEffect(() => {
-        videoRefs.current = videoRefs.current.slice(0, videos.length);
-    }, [videos]);
+    // YouTube video ID for the provided embed
+    const youtubeVideos = [
+        { id: "FXckmIoiIBs" },
 
-    // Handle video playback when index changes
-    useEffect(() => {
-        // Pause all videos first
-        videoRefs.current.forEach((videoRef, index) => {
-            if (videoRef && index !== currentIndex) {
-                videoRef.pause();
-            }
-        });
-
-        // Play the current video
-        const currentVideo = videoRefs.current[currentIndex];
-        if (currentVideo) {
-            currentVideo.play().catch(err => console.error("Video play error:", err));
-        }
-    }, [currentIndex]);
+        { id: "VS3D8bgYhf4", zoom: true },
+        { id: "7XNJvtLRu7g", zoom: true },
+        { id: "2LaCKzfTEoA", zoom: true },
+        { id: "u7kdVe8q5zs", zoom: true },
+        { id: "y0Xso_JdbZE", zoom: true },
+        { id: "8OnJ7xE7iaM", zoom: true },
+        // You can add more YouTube video IDs here
+    ];
 
     const goToNextVideo = () => {
         setCurrentIndex(prevIndex =>
-            prevIndex >= videos.length - 1 ? 0 : prevIndex + 1
+            prevIndex >= youtubeVideos.length - 1 ? 0 : prevIndex + 1
         );
     };
 
     const goToPreviousVideo = () => {
         setCurrentIndex(prevIndex =>
-            prevIndex <= 0 ? videos.length - 1 : prevIndex - 1
+            prevIndex <= 0 ? youtubeVideos.length - 1 : prevIndex - 1
         );
     };
 
@@ -45,27 +36,35 @@ const VideoSwiper = ({ videos }) => {
             className="absolute inset-0 w-full h-full overflow-hidden"
             style={{ touchAction: 'pan-y' }}
         >
-            {videos.map((video, index) => (
+            {youtubeVideos.map((video, index) => (
                 <div
                     key={index}
                     className="absolute inset-0 w-full h-full transition-transform duration-300 ease-out"
                     style={{
                         transform: `translateY(${(index - currentIndex) * 100}%)`,
                         opacity: index === currentIndex ? 1 : 0.5,
-                        zIndex: videos.length - Math.abs(currentIndex - index),
+                        zIndex: youtubeVideos.length - Math.abs(currentIndex - index),
                         willChange: 'transform',
                         backfaceVisibility: 'hidden',
                         WebkitBackfaceVisibility: 'hidden'
                     }}
                 >
-                    <video
-                        ref={el => videoRefs.current[index] = el}
-                        src={chrome.runtime.getURL(video.src)}
-                        loop
-                        muted
-                        playsInline
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                    />
+                    <div className="absolute inset-0 w-full h-full overflow-hidden">
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${video.id}?si=Ikwo-klZdkp2Hie5&controls=0&autoplay=${index === currentIndex ? 1 : 0}&mute=1&loop=1&playlist=${video.id}&showinfo=0&rel=0&modestbranding=1&vq=hd1080&hd=1&quality=hd1080`}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            className={`absolute inset-0 pointer-events-none ${video.zoom ? 'w-[180%] h-[180%] left-[-40%] top-[-40%]' : 'w-full h-full'}`}
+                            style={{
+                                objectFit: "cover",
+                                transform: video.zoom ? "scale(2.5)" : "none"
+                            }}
+                        ></iframe>
+                    </div>
                 </div>
             ))}
 

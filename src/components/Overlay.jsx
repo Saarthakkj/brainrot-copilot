@@ -19,17 +19,6 @@ const Overlay = () => {
     const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
     const [error, setError] = useState(null);
 
-    // Define videos for the swiper
-    const videos = [
-        { src: "videos/gta5.mp4" },
-        { src: "videos/minecraft-1.mp4" },
-        { src: "videos/mobile-games.mp4" },
-        { src: "videos/press.mp4" },
-        { src: "videos/slime.mp4" },
-        { src: "videos/subway-1.mp4" },
-        { src: "videos/subway-2.mp4" }
-    ];
-
     const {
         isListening,
         transcript,
@@ -169,7 +158,7 @@ const Overlay = () => {
                 <div className="flex-1 flex flex-col">
                     <div className="relative overflow-hidden flex-1 flex flex-col -mt-[30px]">
                         {/* VideoSwiper component */}
-                        <VideoSwiper videos={videos} />
+                        <VideoSwiper />
 
                         <div className="relative z-10 flex flex-col flex-1 p-3">
                             {error && (
