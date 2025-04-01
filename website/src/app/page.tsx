@@ -25,6 +25,7 @@ export default function Home() {
                 loop
                 muted
                 playsInline
+                suppressHydrationWarning
                 className="w-full rounded-lg shadow-lg bg-black/5 dark:bg-white/5"
                 style={{ maxHeight: "300px", objectFit: "contain" }}
               />
