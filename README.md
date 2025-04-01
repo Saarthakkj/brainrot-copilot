@@ -1,22 +1,15 @@
 # Brainrot Copilot
 
-This repository contains:
+Brainrot Copilot is a Chrome extension that adds a brainrot overlay to your browser plus live transcriptions of the audio from your current tab. It's perfect for helping you focus on your work.
 
-- [Chrome Extension](/extension) - A Chrome extension that adds a phone shaped overlay to your browser tabs showing brainrot videos while providing live transcriptions
-- [Website](/website) - Project website
-
-## Extension
-
-Brainrot Copilot is a Chrome extension that adds a phone shaped overlay to your browser tabs showing brainrot videos while providing live transcriptions of the audio from your current tab. It's perfect for helping you focus on your work.
-
-### Features
+## Features
 
 - Watch entertaining videos in a sleek phone-shaped overlay
 - Get live transcriptions of audio from your current tab (requires a Speechmatics API key)
 - Drag the overlay anywhere on your screen
 - Toggle captions on/off with a switch
 
-### How to Install
+## How to Install
 
 1. Download the extension:
 
@@ -38,7 +31,7 @@ Brainrot Copilot is a Chrome extension that adds a phone shaped overlay to your 
    - Find Brainrot Copilot in the list
    - Click the pin icon to keep it visible in your toolbar
 
-### How to Use
+## How to Use
 
 1. Go to any website with audio content
 2. Click the Brainrot Copilot icon in your toolbar
