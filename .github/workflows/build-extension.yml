@@ -33,6 +33,9 @@ jobs:
 
       - name: Create release ZIP
         run: |
+          # Make sure we're including manifest.json, icons, and all built files
+          cp manifest.json dist/
+          cp -r icons dist/
           cd dist
           zip -r ../extension.zip ./*
           cd ..

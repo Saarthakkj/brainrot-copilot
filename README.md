@@ -14,7 +14,7 @@ Brainrot Copilot is a Chrome extension that adds a brainrot overlay to your brow
 1. Download the extension:
 
    - Go to the [Releases](https://github.com/3eif/brainrot-copilot/releases) page
-   - Download the latest release ZIP file
+   - Download the file named `brainrot-copilot-v{version}.zip` (e.g., `brainrot-copilot-v9.zip`) from the latest release
    - Extract the ZIP file to a folder on your computer
 
 2. Install in Chrome:
