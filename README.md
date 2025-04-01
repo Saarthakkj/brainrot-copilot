@@ -1,6 +1,6 @@
 # Brainrot Copilot
 
-Brainrot Copilot is a Chrome extension that adds a brainrot overlay to your browser plus live transcriptions of the audio from your current tab. It's perfect for helping you focus on your work.
+Brainrot Copilot is a Chrome extension that adds a brainrot overlay to your browser and provides live transcriptions of audio from your current tab. It's perfect for helping you focus on your work.
 
 ## Features
 
