@@ -31,21 +31,19 @@ jobs:
       - name: Build extension
         run: bun run build
 
-      - name: Create release ZIP
+      - name: Prepare release files
         run: |
-          # Create a temporary directory for packaging
-          mkdir release_package
-          # Copy built files from dist
-          cp -r dist/* release_package/
-          # Copy manifest and icons
-          cp manifest.json release_package/
-          cp -r icons release_package/
-          # Create ZIP from the properly structured directory
-          cd release_package
+          # Copy manifest and icons to dist
+          cp manifest.json dist/
+          cp -r icons dist/
+
+          # Update paths in manifest.json to remove dist/
+          cd dist
+          sed -i 's/"dist\//"/' manifest.json
+
+          # Create ZIP with all files
           zip -r ../extension.zip ./*
           cd ..
-          # Cleanup
-          rm -rf release_package
 
       - name: Create Release
         id: create_release
