@@ -33,9 +33,11 @@ jobs:
 
       - name: Prepare release files
         run: |
-          # Copy manifest and icons to dist
+          # Copy manifest, service worker, and icons to dist
           cp manifest.json dist/
+          cp service-worker.js dist/
           cp -r icons dist/
+          cp offscreen.html dist/
 
           # Update paths in manifest.json to remove dist/
           cd dist
