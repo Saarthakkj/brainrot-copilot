@@ -18,6 +18,9 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: "Brainrot Copilot",
   description: "Never lose focus while watching a lecture again",
+  icons: {
+    icon: "/icon48.png",
+  },
 };
 
 export default function RootLayout({
