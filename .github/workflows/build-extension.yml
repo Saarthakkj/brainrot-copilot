@@ -33,12 +33,19 @@ jobs:
 
       - name: Create release ZIP
         run: |
-          # Make sure we're including manifest.json, icons, and all built files
-          cp manifest.json dist/
-          cp -r icons dist/
-          cd dist
+          # Create a temporary directory for packaging
+          mkdir release_package
+          # Copy built files from dist
+          cp -r dist/* release_package/
+          # Copy manifest and icons
+          cp manifest.json release_package/
+          cp -r icons release_package/
+          # Create ZIP from the properly structured directory
+          cd release_package
           zip -r ../extension.zip ./*
           cd ..
+          # Cleanup
+          rm -rf release_package
 
       - name: Create Release
         id: create_release
