@@ -53,7 +53,7 @@ const VideoSwiper = ({ videos }) => {
                         <iframe
                             width="100%"
                             height="100%"
-                            src={`https://www.youtube.com/embed/${video.id}?si=Ikwo-klZdkp2Hie5&controls=0&autoplay=${index === currentIndex ? 1 : 0}&mute=1&loop=1&playlist=${video.id}&showinfo=0&rel=0&modestbranding=1&vq=hd1080&hd=1&quality=hd1080`}
+                            src={`https://www.youtube.com/embed/${video.id}?si=Ikwo-klZdkp2Hie5&controls=0&autoplay=${index === currentIndex ? 1 : 0}&mute=1&loop=1&playlist=${video.id}&showinfo=0&rel=0&modestbranding=1&vq=hd1080&hd=1&quality=hd1080&playsinline=1&iv_load_policy=3&origin=${window.location.origin}`}
                             title="YouTube video player"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
