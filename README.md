@@ -20,7 +20,7 @@ Brainrot Copilot is a Chrome extension that adds a phone shaped overlay to your 
 
 1. Download the extension:
 
-   - Go to the [Releases](https://github.com/yourusername/brainrot-copilot/releases) page
+   - Go to the [Releases](https://github.com/3eif/brainrot-copilot/releases) page
    - Download the latest release ZIP file
    - Extract the ZIP file to a folder on your computer
 

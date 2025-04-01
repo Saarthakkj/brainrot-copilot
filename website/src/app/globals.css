@@ -177,3 +177,11 @@
     pointer-events: none;
   }
 }
+
+.bg-cream-100 {
+  background-color: #f9f6f0; /* Light cream color */
+}
+
+.dark .bg-cream-100 {
+  background-color: #1a1a1a; /* Dark mode equivalent */
+}
