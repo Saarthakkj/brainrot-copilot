@@ -141,22 +141,24 @@ const Overlay = () => {
                 position: 'fixed',
                 left: '20px',
                 top: '20px',
-                zIndex: 999999
+                zIndex: 999999,
+                border: '12px solid black',
+                borderRadius: '52px'
             }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onDoubleClick={handleDoubleClick}
-            className="fixed left-5 top-5 shadow-lg cursor-grab select-none flex flex-col pointer-events-auto overflow-hidden rounded-[44px] bg-black"
+            className="fixed left-5 top-5 shadow-lg cursor-grab select-none flex flex-col pointer-events-auto overflow-hidden rounded-[52px] bg-black"
         >
             {/* Side buttons */}
-            <div className="absolute -left-[8px] top-[100px] w-2 h-[50px] rounded-[2px] bg-[#222] z-[999999]" />
-            <div className="absolute -left-[8px] top-[160px] w-2 h-[50px] rounded-[2px] bg-[#222] z-[999999]" />
-            <div className="absolute -right-[8px] top-[120px] w-2 h-[60px] rounded-[2px] bg-[#222] z-[999999]" />
+            <div className="absolute -left-[10px] top-[120px] w-2 h-[60px] rounded-[2px] bg-[#222] z-[999999]" />
+            <div className="absolute -left-[10px] top-[190px] w-2 h-[60px] rounded-[2px] bg-[#222] z-[999999]" />
+            <div className="absolute -right-[10px] top-[140px] w-2 h-[70px] rounded-[2px] bg-[#222] z-[999999]" />
 
-            <div className="w-full h-full flex flex-col relative overflow-hidden rounded-[34px] bg-black">
+            <div className="w-full h-full flex flex-col relative overflow-hidden rounded-[40px] bg-black">
                 <div className="flex-1 flex flex-col">
-                    <div className="relative overflow-hidden flex-1 flex flex-col -mt-[30px]">
+                    <div className="relative overflow-hidden flex-1 flex flex-col -mt-[50px]">
                         {/* VideoSwiper component */}
                         <VideoSwiper />
 

@@ -4,31 +4,34 @@
 
 /* Container styles */
 #tab-capture-overlay-container {
-  @apply fixed inset-0 pointer-events-none overflow-visible;
-  display: block;
-  z-index: 9999;
+  @apply fixed inset-0 pointer-events-none overflow-visible !important;
+  display: block !important;
+  z-index: 9999 !important;
 }
 
 /* iPhone-like bezel styling */
 #tab-capture-overlay {
-  position: relative;
-  border: 9px solid black;
-  border-radius: 44px;
-  overflow: hidden;
+  position: relative !important;
+  border: 12px solid black !important;
+  border-radius: 52px !important;
+  overflow: hidden !important;
+  background: black !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
 #tab-capture-overlay::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 45%;
-  height: 23px;
-  background: black;
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
-  z-index: 999999;
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 45% !important;
+  height: 28px !important;
+  background: black !important;
+  border-bottom-left-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  z-index: 999999 !important;
 }
 
 /* Animation for captions */
@@ -45,124 +48,124 @@
 
 /* Custom z-index utility that exceeds Tailwind's built-in z-indices */
 .z-max-plus {
-  z-index: 99999;
+  z-index: 99999 !important;
 }
 
 /* Scrollbar styles for transcript container */
-.overflow-y-auto::-webkit-scrollbar {
-  @apply w-1;
+#tab-capture-overlay .overflow-y-auto::-webkit-scrollbar {
+  @apply w-1 !important;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  @apply bg-black/20 rounded;
+#tab-capture-overlay .overflow-y-auto::-webkit-scrollbar-track {
+  @apply bg-black/20 rounded !important;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  @apply bg-white/30 rounded hover:bg-white/50;
+#tab-capture-overlay .overflow-y-auto::-webkit-scrollbar-thumb {
+  @apply bg-white/30 rounded hover:bg-white/50 !important;
 }
 
 /* Add TikTok-like caption styles */
-.tiktok-container {
-  @apply relative overflow-hidden flex-1 flex flex-col -mt-[30px];
+#tab-capture-overlay .tiktok-container {
+  @apply relative overflow-hidden flex-1 flex flex-col -mt-[50px] !important;
 }
 
 /* Video swiper styles */
-.video-swiper-container {
-  @apply absolute inset-0 w-full h-full overflow-hidden;
-  touch-action: pan-y;
+#tab-capture-overlay .video-swiper-container {
+  @apply absolute inset-0 w-full h-full overflow-hidden !important;
+  touch-action: pan-y !important;
 }
 
-.video-item {
-  @apply absolute inset-0 w-full h-full transition-transform duration-300 ease-out;
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+#tab-capture-overlay .video-item {
+  @apply absolute inset-0 w-full h-full transition-transform duration-300 ease-out !important;
+  will-change: transform !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
 }
 
-.video-element {
-  @apply absolute inset-0 w-full h-full object-cover;
-  pointer-events: none;
+#tab-capture-overlay .video-element {
+  @apply absolute inset-0 w-full h-full object-cover !important;
+  pointer-events: none !important;
 }
 
 /* Navigation buttons */
-.swiper-nav-buttons {
-  @apply absolute bottom-20 right-5 flex flex-col gap-2 z-20;
+#tab-capture-overlay .swiper-nav-buttons {
+  @apply absolute bottom-20 right-5 flex flex-col gap-2 z-20 !important;
 }
 
-.swiper-nav-button {
-  @apply flex items-center justify-center w-10 h-10 rounded-full bg-black/40 backdrop-blur border border-white/20 text-white hover:bg-black/60 transition-all;
+#tab-capture-overlay .swiper-nav-button {
+  @apply flex items-center justify-center w-10 h-10 rounded-full bg-black/40 backdrop-blur border border-white/20 text-white hover:bg-black/60 transition-all !important;
 }
 
-.swiper-nav-button:active {
-  @apply transform scale-95;
+#tab-capture-overlay .swiper-nav-button:active {
+  @apply transform scale-95 !important;
 }
 
-.swiper-nav-button svg {
-  @apply stroke-white;
+#tab-capture-overlay .swiper-nav-button svg {
+  @apply stroke-white !important;
 }
 
 /* Text shadow effect for better visibility */
-.tiktok-container h1 {
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+#tab-capture-overlay .tiktok-container h1 {
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Add animation to the captions */
-.tiktok-container h1 {
-  animation: captionFadeIn 0.3s ease-out;
+#tab-capture-overlay .tiktok-container h1 {
+  animation: captionFadeIn 0.3s ease-out !important;
 }
 
 /* Transcription toggle styles */
-.transcription-toggle-container {
-  @apply absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center z-10;
+#tab-capture-overlay .transcription-toggle-container {
+  @apply absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center z-10 !important;
 }
 
-.transcription-toggle {
-  @apply flex items-center justify-end bg-black/40 backdrop-blur px-4 py-2 rounded-full gap-3;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+#tab-capture-overlay .transcription-toggle {
+  @apply flex items-center justify-end bg-black/40 backdrop-blur px-4 py-2 rounded-full gap-3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-.toggle-label {
-  @apply text-white text-sm font-medium;
+#tab-capture-overlay .toggle-label {
+  @apply text-white text-sm font-medium !important;
 }
 
 /* API Key Dialog styles */
-.api-key-dialog-backdrop {
-  @apply fixed inset-0 bg-black/70 z-[1000000] backdrop-blur-sm flex items-center justify-center pointer-events-auto;
+#tab-capture-overlay .api-key-dialog-backdrop {
+  @apply fixed inset-0 bg-black/70 z-[1000000] backdrop-blur-sm flex items-center justify-center pointer-events-auto !important;
 }
 
-.api-key-dialog {
-  @apply bg-[#111] text-white p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700;
+#tab-capture-overlay .api-key-dialog {
+  @apply bg-[#111] text-white p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700 !important;
 }
 
-.api-key-dialog h2 {
-  @apply text-xl font-bold mb-2;
+#tab-capture-overlay .api-key-dialog h2 {
+  @apply text-xl font-bold mb-2 !important;
 }
 
-.api-key-dialog p {
-  @apply mb-4 text-gray-300;
+#tab-capture-overlay .api-key-dialog p {
+  @apply mb-4 text-gray-300 !important;
 }
 
-.api-key-input {
-  @apply w-full p-3 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500;
+#tab-capture-overlay .api-key-input {
+  @apply w-full p-3 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 !important;
 }
 
-.cancel-button {
-  @apply py-2 px-4 rounded bg-gray-700 text-white hover:bg-gray-600 transition-colors;
+#tab-capture-overlay .cancel-button {
+  @apply py-2 px-4 rounded bg-gray-700 text-white hover:bg-gray-600 transition-colors !important;
 }
 
-.save-button {
-  @apply py-2 px-4 rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors;
+#tab-capture-overlay .save-button {
+  @apply py-2 px-4 rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors !important;
 }
 
 /* Transcription toggle container */
-.transcription-toggle-container {
-  @apply absolute bottom-5 left-1/2 -translate-x-1/2;
+#tab-capture-overlay .transcription-toggle-container {
+  @apply absolute bottom-5 left-1/2 -translate-x-1/2 !important;
 }
 
-.transcription-toggle {
-  @apply flex items-center bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full gap-2;
+#tab-capture-overlay .transcription-toggle {
+  @apply flex items-center bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full gap-2 !important;
 }
 
-.toggle-label {
-  @apply text-white text-sm font-medium;
+#tab-capture-overlay .toggle-label {
+  @apply text-white text-sm font-medium !important;
 }

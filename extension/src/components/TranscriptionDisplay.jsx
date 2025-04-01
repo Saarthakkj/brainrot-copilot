@@ -77,7 +77,7 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
                         <div className="w-full px-4">
                             <div className="px-6 py-4 rounded-xl text-center max-w-full mx-auto">
                                 <h1
-                                    className="text-white text-3xl font-extrabold leading-tight tracking-tight break-words uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
+                                    className="text-white text-5xl font-extrabold leading-tight tracking-tight break-words uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
                                 >
                                     {displayedText}
                                 </h1>
@@ -85,7 +85,7 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
                         </div>
                     ) : (
                         <div className="text-center rounded-xl px-6 py-4">
-                            <p className="text-white text-3xl font-bold uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">LISTENING...</p>
+                            <p className="text-white text-4xl font-bold uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">LISTENING...</p>
                         </div>
                     )}
                 </div>

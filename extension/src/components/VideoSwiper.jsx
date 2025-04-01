@@ -7,15 +7,15 @@ const VideoSwiper = ({ videos }) => {
 
     // YouTube video ID for the provided embed
     const youtubeVideos = [
-        { id: "FXckmIoiIBs" },
+        { id: "zZ7AimPACzc" },
 
         { id: "VS3D8bgYhf4", zoom: true },
         { id: "7XNJvtLRu7g", zoom: true },
         { id: "2LaCKzfTEoA", zoom: true },
         { id: "u7kdVe8q5zs", zoom: true },
+        { id: "FXckmIoiIBs" },
         { id: "y0Xso_JdbZE", zoom: true },
         { id: "8OnJ7xE7iaM", zoom: true },
-        // You can add more YouTube video IDs here
     ];
 
     const goToNextVideo = () => {
@@ -61,7 +61,8 @@ const VideoSwiper = ({ videos }) => {
                             className={`absolute inset-0 pointer-events-none ${video.zoom ? 'w-[180%] h-[180%] left-[-40%] top-[-40%]' : 'w-full h-full'}`}
                             style={{
                                 objectFit: "cover",
-                                transform: video.zoom ? "scale(2.5)" : "none"
+                                transform: video.zoom ? "scale(2.5)" : "scale(1.02)",
+                                top: !video.zoom ? "3%" : undefined
                             }}
                         ></iframe>
                     </div>

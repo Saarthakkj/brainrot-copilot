@@ -25,7 +25,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           type: 'stop-recording',
           target: 'offscreen'
         });
-        chrome.action.setIcon({ path: 'icons/not-recording.png' });
+        chrome.action.setIcon({
+          path: {
+            "16": "icons/off/icon16.png",
+            "32": "icons/off/icon32.png",
+            "48": "icons/off/icon48.png",
+            "128": "icons/off/icon128.png"
+          }
+        });
       }
       sendResponse({ success: true });
     });
@@ -193,7 +200,14 @@ chrome.action.onClicked.addListener(async (tab) => {
       type: 'stop-recording',
       target: 'offscreen'
     });
-    chrome.action.setIcon({ path: 'icons/not-recording.png' });
+    chrome.action.setIcon({
+      path: {
+        "16": "icons/off/icon16.png",
+        "32": "icons/off/icon32.png",
+        "48": "icons/off/icon48.png",
+        "128": "icons/off/icon128.png"
+      }
+    });
 
     // Hide the overlay
     try {
@@ -237,7 +251,14 @@ chrome.action.onClicked.addListener(async (tab) => {
     // console.log('[SERVICE] Recording started response:', response); // DEBUG
   });
 
-  chrome.action.setIcon({ path: '/icons/recording.png' });
+  chrome.action.setIcon({
+    path: {
+      "16": "icons/on/icon16.png",
+      "32": "icons/on/icon32.png",
+      "48": "icons/on/icon48.png",
+      "128": "icons/on/icon128.png"
+    }
+  });
 
   // Show the overlay
   await chrome.tabs.sendMessage(tab.id, { type: 'toggle-overlay', show: true });
