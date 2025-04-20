@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDrag } from './hooks/useDrag.js';
 import { calculateDimensions } from '../utils/dimensions';
-import { useYoutubeCaptions } from './hooks/useYoutubeCaptions.js';
+import { useYoutubeCaptions } from './hooks/useYoutubeCaptions';
 import TranscriptionDisplay from './TranscriptionDisplay';
 import VideoSwiper from './VideoSwiper';
 import '../styles.css';

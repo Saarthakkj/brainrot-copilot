@@ -1,0 +1,4 @@
+- how can i add responsiveness to pause/rewind/playback speed ?
+- how can i take into account the delay caused by youtube loading/ latency of (yt) api call?
+	-- 
+

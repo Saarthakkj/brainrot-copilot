@@ -161,7 +161,6 @@ const parseJsonTimedText = (jsonText) => {
     }
 };
 
-
 export const useYoutubeCaptions = (videoId) => {
     const [captions, setCaptions] = useState([]);
     const [currentCaption, setCurrentCaption] = useState('');
@@ -170,6 +169,7 @@ export const useYoutubeCaptions = (videoId) => {
     const captionIndexRef = useRef(0);
     const timeoutRef = useRef(null);
 
+    // Effect to fetch captions when videoId changes
     useEffect(() => {
         if (!videoId) {
             setCaptions([]);
@@ -177,7 +177,9 @@ export const useYoutubeCaptions = (videoId) => {
             setError(null);
             setIsLoading(false);
             return;
-        }        const fetchCaptions = async () => {
+        }
+        
+        const fetchCaptions = async () => {
             setIsLoading(true);
             setError(null);
             setCaptions([]);
@@ -242,7 +244,9 @@ export const useYoutubeCaptions = (videoId) => {
                     throw new Error('Could not find a usable caption track');
                 }
                 
-                console.log(`[YouTube Captions] Selected track: ${captionTrack.name?.simpleText || 'Unnamed'} (${captionTrack.languageCode})`);                // Prepare the base URL for captions
+                console.log(`[YouTube Captions] Selected track: ${captionTrack.name?.simpleText || 'Unnamed'} (${captionTrack.languageCode})`);
+                
+                // Prepare the base URL for captions
                 const baseUrl = captionTrack.baseUrl;
                 console.log('[YouTube Captions] Base caption URL:', baseUrl);
 
@@ -314,43 +318,58 @@ export const useYoutubeCaptions = (videoId) => {
 
         fetchCaptions();
 
-        // Cleanup function
+        // Cleanup function for fetchCaptions effect
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [videoId]);
-
+    }, [videoId]); // Dependency array for fetchCaptions effect
+    
     // Effect to update the current caption based on time
     useEffect(() => {
         if (captions.length === 0 || isLoading) {
             setCurrentCaption(''); // Clear caption if none loaded or still loading
             return;
         }
+        
+        // Use captions as-is without breaking them into smaller chunks
+        const processedCaptions = captions.map(caption => ({
+            ...caption,
+            // Keep the original caption text completely intact
+            text: caption.text
+        }));
+        
+        console.log(`[YouTube Captions] Using ${processedCaptions.length} full captions without chunking`);
 
         const scheduleNextCaption = () => {
-            if (captionIndexRef.current >= captions.length) {
+            if (captionIndexRef.current >= processedCaptions.length) {
                 setCurrentCaption(''); // End of captions
                 return;
             }
 
-            const current = captions[captionIndexRef.current];
-            const next = captions[captionIndexRef.current + 1];
-
-            // Display current caption
+            const current = processedCaptions[captionIndexRef.current];
+            const next = processedCaptions[captionIndexRef.current + 1];
+            
+            // Display current full caption 
             setCurrentCaption(current.text);
-
-            // Calculate when the next caption should start
-            const displayDuration = current.dur * 1000; // Duration to show the current caption
+              // Use the original duration from YouTube for this caption
+            const displayDuration = current.dur * 1000; // Use exact duration from YouTube
             let timeUntilNext = displayDuration;
 
             if (next) {
-                 // More precise timing if next caption exists
-                 const gap = (next.start - (current.start + current.dur)) * 1000;
-                 timeUntilNext = displayDuration + Math.max(0, gap); // Show for its duration + gap
+                // Calculate the exact time until the next caption should appear
+                // This uses YouTube's exact timing rather than our modifications
+                const exactTimeToNext = (next.start - current.start) * 1000;
+                
+                // Use the exact timing from YouTube caption data
+                timeUntilNext = exactTimeToNext;
+                
+                // If captions would overlap (negative gap), just use the display duration
+                if (timeUntilNext < displayDuration) {
+                    timeUntilNext = displayDuration;
+                }
             }
-
 
             // Schedule the next update
             timeoutRef.current = setTimeout(() => {
@@ -369,7 +388,7 @@ export const useYoutubeCaptions = (videoId) => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
-             setCurrentCaption(''); // Clear caption on cleanup
+            setCurrentCaption(''); // Clear caption on cleanup
         };
     }, [captions, isLoading]); // Rerun when captions are loaded or loading state changes
 
