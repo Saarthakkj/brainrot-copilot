@@ -1,0 +1,33 @@
+\
+- **Step 1: Detect YouTube Page**
+  - Modified `extension/content-script.jsx`:
+    - Added state `isYouTubePage` and `videoId`.
+    - Added logic in `useEffect` to check `window.location` for YouTube watch page.
+    - Extracted video ID using `URLSearchParams`.
+    - Passed `isYouTubePage` and `videoId` as props to `Overlay`.
+- **Step 2: Implement `useYoutubeCaptions` Hook**
+  - Created `extension/src/hooks/useYoutubeCaptions.js`.
+  - Implemented hook to fetch captions from YouTube's `timedtext` endpoint.
+  - Added `parseTimedText` helper function for XML parsing.
+  - Fetches English (`en`) captions first, falls back to default language.
+  - Manages `currentCaption` state based on caption timing (`start`, `dur`).
+  - Handles loading and error states.
+  - Returns `currentCaption`, `isLoading`, `error`.
+- **Step 3 & 4: Wire up Hooks in Overlay & Fallback**
+  - Modified `extension/src/components/Overlay.jsx`:
+    - Imported `useYoutubeCaptions`.
+    - Accepted `isYouTubePage` and `videoId` props.
+    - Added state `currentTranscriptSource`.
+    - Conditionally called `useYoutubeCaptions` or `useSpeechTranscription` based on `isYouTubePage`.
+    - Derived combined state (`isLoading`, `displayTranscript`, etc.) from the active hook.
+    - Unified error display.
+    - Updated caption toggle logic for different sources.
+    - Conditionally rendered `ApiKeyDialog` only for Speechmatics.
+    - Passed combined state to `TranscriptionDisplay`.
+- **Step 5: Fallback to Speechmatics on non-YouTube pages**
+  - Handled in `Overlay.jsx` by switching to `useSpeechTranscription` when `isYouTubePage` is false.
+
+- **Step 6: Authentication & quotas**
+  - YouTube captions are fetched from the public `timedtext` endpoint, so no YouTube API key is required.
+  - Speechmatics API key dialog and storage logic remain unchanged for non-YouTube pages.
+  - No changes needed for YouTube API key handling.

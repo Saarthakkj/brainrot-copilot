@@ -1,49 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDrag } from '../hooks/useDrag';
+import { useDrag } from './hooks/useDrag.js';
 import { calculateDimensions } from '../utils/dimensions';
-import { useSpeechTranscription } from '../hooks/useSpeechTranscription';
+import { useYoutubeCaptions } from './hooks/useYoutubeCaptions.js';
 import TranscriptionDisplay from './TranscriptionDisplay';
 import VideoSwiper from './VideoSwiper';
-import ApiKeyDialog from './ApiKeyDialog';
 import '../styles.css';
-import { Switch } from './ui/Switch';
 
-const Overlay = () => {
+const Overlay = ({ isYouTubePage, videoId }) => {
     const overlayRef = useRef(null);
     const [time, setTime] = useState(new Date());
     const { isDragging, handleMouseDown, handleMouseMove, handleMouseUp } = useDrag(overlayRef);
     const { width, height } = calculateDimensions();
-    const [showCaptions, setShowCaptions] = useState(false);
-    const [apiKey, setApiKey] = useState('');
-    const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-    const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
     const [error, setError] = useState(null);
 
-    const {
-        isListening,
-        transcript,
-        partialTranscript,
-        error: transcriptionError,
-        audioLevel,
-        showTranscript,
-        startListening,
-        stopListening
-    } = useSpeechTranscription(apiKey);
-
-    // Load API key from storage when component mounts
-    useEffect(() => {
-        chrome.storage.sync.get(['speechmaticsApiKey'], (result) => {
-            if (result.speechmaticsApiKey) {
-                setApiKey(result.speechmaticsApiKey);
-                setShowCaptions(true); // Enable captions by default if API key exists
-            }
-            setIsLoadingApiKey(false);
-            // Only show dialog if we don't have an API key
-            if (!result.speechmaticsApiKey) {
-                setShowApiKeyDialog(true);
-            }
-        });
-    }, []);
+    // YouTube captions hook
+    const youtube = useYoutubeCaptions(isYouTubePage ? videoId : null);
 
     // Update time every minute
     useEffect(() => {
@@ -54,82 +25,14 @@ const Overlay = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Start transcription when API key is available and captions are enabled
+    // Handle YouTube caption errors
     useEffect(() => {
-        if (isLoadingApiKey) return; // Wait until we know if we have an API key
-
-        if (showCaptions) {
-            if (apiKey) {
-                // We have an API key, start listening
-                const attemptStart = async () => {
-                    try {
-                        await startListening();
-                        console.log('[INFO] Transcription started');
-                    } catch (err) {
-                        console.error('[ERROR] Failed to start transcription:', err);
-                        // If we get an error starting, the API key might be invalid
-                        // Prompt for a new one
-                        setShowApiKeyDialog(true);
-                    }
-                };
-
-                attemptStart();
-            } else {
-                // No API key, show dialog
-                setShowApiKeyDialog(true);
-            }
-        } else if (isListening) {
-            // If captions are toggled off, stop listening
-            stopListening();
-        }
-    }, [showCaptions, apiKey, isLoadingApiKey]);
-
-    // Double click to toggle transcription
-    const handleDoubleClick = () => {
-        if (apiKey) {
-            setShowCaptions(!showCaptions);
+        if (isYouTubePage && youtube.error) {
+            setError(`YouTube Captions Error: ${youtube.error}`);
         } else {
-            // No API key, show dialog
-            setShowApiKeyDialog(true);
+            setError(null);
         }
-    };
-
-    // Handle API key save
-    const handleSaveApiKey = (newApiKey) => {
-        // Save to Chrome storage
-        chrome.storage.sync.set({ speechmaticsApiKey: newApiKey }, () => {
-            console.log('[INFO] API key saved to storage');
-            setApiKey(newApiKey);
-            setShowApiKeyDialog(false);
-            setShowCaptions(true); // Turn on captions
-        });
-    };
-
-    // Handle API key dialog cancel
-    const handleCancelApiKey = () => {
-        setShowApiKeyDialog(false);
-        // If no API key, turn captions off
-        if (!apiKey) {
-            setShowCaptions(false);
-        }
-    };
-
-    // Toggle transcription on/off with immediate UI feedback
-    const handleToggleTranscription = () => {
-        if (!showCaptions && !apiKey) {
-            // If turning on captions but no API key, show dialog
-            setShowApiKeyDialog(true);
-        } else {
-            // Otherwise just toggle
-            setShowCaptions(!showCaptions);
-        }
-    };
-
-    const timeStr = time.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
+    }, [isYouTubePage, youtube.error]);
 
     return (
         <div
@@ -148,7 +51,6 @@ const Overlay = () => {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onDoubleClick={handleDoubleClick}
             className="fixed left-5 top-5 shadow-lg cursor-grab select-none flex flex-col pointer-events-auto overflow-hidden rounded-[52px] bg-black"
         >
             {/* Side buttons */}
@@ -162,9 +64,10 @@ const Overlay = () => {
                         {/* VideoSwiper component */}
                         <VideoSwiper />
 
-                        <div className="relative z-10 flex flex-col flex-1 p-3">
+                        {/* Overlay captions and errors on top of the video */}
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-3 pointer-events-none">
                             {error && (
-                                <div className="bg-red-800/90 text-white p-2 text-sm rounded-md m-2 text-center flex items-center justify-between">
+                                <div className="bg-red-800/90 text-white p-2 text-sm rounded-md m-2 text-center flex items-center justify-between pointer-events-auto">
                                     <div className="flex-1">
                                         <span className="font-medium">Error:</span> {error}
                                     </div>
@@ -177,37 +80,21 @@ const Overlay = () => {
                                 </div>
                             )}
 
-                            <TranscriptionDisplay
-                                transcript={transcript}
-                                partialTranscript={partialTranscript}
-                                isListening={showCaptions && isListening}
-                                showTranscript={showTranscript}
-                            />
+                            {/* TranscriptionDisplay for YouTube captions */}
+                            {isYouTubePage && (
+                                <TranscriptionDisplay
+                                    transcript={youtube.currentCaption}
+                                    partialTranscript=""
+                                    isListening={!youtube.isLoading && youtube.currentCaption !== ''}
+                                    showTranscript={true}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
-
-                {/* Transcription Toggle */}
-                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[999999]">
-                    <div className="flex items-center bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full gap-2 border border-white/20">
-                        <span className="text-white text-sm font-medium">Captions</span>
-                        <Switch
-                            checked={showCaptions}
-                            onCheckedChange={handleToggleTranscription}
-                        />
-                    </div>
-                </div>
             </div>
-
-            {/* API Key Dialog */}
-            {showApiKeyDialog && (
-                <ApiKeyDialog
-                    onSave={handleSaveApiKey}
-                    onCancel={handleCancelApiKey}
-                />
-            )}
         </div>
     );
 };
 
-export default Overlay; 
+export default Overlay;

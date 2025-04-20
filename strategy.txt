@@ -1,0 +1,28 @@
+ere’s a high‑level plan for adding YouTube‑only captions alongside your existing Speechmatics flow:
+
+Detect when the active tab is a YouTube watch page
+• In your content‑script (e.g. content‑script.jsx) check window.location.host === 'www.youtube.com' && /v=/.test(window.location.search).
+
+Extract the video ID from the URL
+• e.g. new URLSearchParams(window.location.search).get('v').
+
+Implement a new hook useYoutubeCaptions(videoId)
+• Call YouTube Data API v3’s captions.list to find available tracks.
+• Fetch the timed‑text via either the captions.download endpoint or by hitting the timedtext endpoint that the player uses (https://www.youtube.com/api/timedtext?v=${videoId}&lang=en).
+• Parse the XML/VTT into an array of { start, dur, text }.
+• Expose a currentCaption state that advances with setTimeout() or requestAnimationFrame() based on start/dur.
+
+Wire it up in your Overlay component
+• In Overlay.jsx, detect YouTube mode before calling startListening().
+• If YouTube, call useYoutubeCaptions(videoId) instead of useSpeechTranscription(apiKey).
+• Pass its currentCaption into <TranscriptionDisplay> as transcript.
+
+Fall back to the Speechmatics pipeline on non‑YouTube pages
+• Keep your existing useSpeechTranscription(apiKey) logic untouched and only invoke it when !isYouTube.
+
+Authentication & quotas
+• Ask the user for a YouTube API key (or reuse your Speechmatics dialog with a different storage key).
+• Store it in chrome.storage.sync and include it in your requests.
+
+That way, on YouTube you fetch and render the built‑in captions (no audio processing), and elsewhere you fall back to your Speechmatics flow.
+

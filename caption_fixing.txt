@@ -1,0 +1,60 @@
+# Caption Not Displaying in Brainrot Copilot Overlay - Error Analysis
+
+## Current Issue:
+The overlay is not showing captions even though the toggle is present. Based on code analysis, there are several potential issues:
+
+1. **Conditional Rendering in TranscriptionDisplay**: 
+   The TranscriptionDisplay component has a conditional check that prevents rendering if `showTranscript` is false or `isListening` is false:
+   ```jsx
+   // In TranscriptionDisplay.jsx
+   if (!showTranscript || !isListening) {
+       return null;
+   }
+   ```
+
+2. **Multiple State Dependencies**: 
+   The caption display relies on multiple states and props that need to align correctly:
+   - `showCaptions` (from toggle switch)
+   - `isSourceListening` (depends on either `speechmatics.isListening` or YouTube caption availability)
+   - `showSourceTranscript` (depends on source)
+   - The actual transcript content being available
+
+3. **Default State and Initial Values**:
+   - `showCaptions` is set to true by default, but it might not automatically start the transcription
+   - Speechmatics requires an API key to start, which might not be available on initial load
+
+4. **Transcription Source Logic**:
+   The app uses a complex conditional logic to determine which transcription source to use:
+   ```jsx
+   const isSourceListening = currentTranscriptSource === 'speechmatics' ? 
+       speechmatics.isListening : 
+       !youtube.isLoading && !youtube.error && youtube.currentCaption !== '';
+   ```
+
+5. **Toggle Button Implementation**:
+   The toggle button doesn't directly start/stop listening but relies on useEffect hooks to react to state changes.
+
+## Proposed Solution:
+
+1. **Remove the Caption Toggle**:
+   - Remove the toggle UI component as requested
+   - Set `showCaptions` to always be true
+
+2. **Simplify Transcription Display Logic**:
+   - Modify the condition in TranscriptionDisplay to show a "Listening..." state even when waiting
+   - Remove dependency on `showTranscript` and simplify the conditions
+
+3. **Auto-start Transcription**:
+   - Ensure transcription starts automatically when the component mounts
+   - For YouTube pages, immediately try to fetch captions
+   - For non-YouTube pages, prompt for API key if not available
+
+4. **Improved Error Handling**:
+   - Add more explicit error messages about missing API key or transcription issues
+   - Make errors more visible and provide clear guidance
+
+5. **Debugging Helpers**:
+   - Add console logs to trace the transcription state
+   - Visualize the current state (listening/not listening) clearly in the UI
+
+I'll implement these changes one by one, focusing first on removing the toggle and ensuring captions are always enabled by default.

@@ -6,7 +6,7 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
     const [displayedText, setDisplayedText] = useState('');
     const lastUpdateRef = useRef(Date.now());
 
-    // Improved word extraction with smooth transitions
+    // Process the caption text
     useEffect(() => {
         // If not showing transcript at all, don't process anything
         if (!showTranscript) {
@@ -14,15 +14,15 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
             return;
         }
 
-        const extractLastWords = () => {
-            // If not listening, clear displayed text immediately
-            if (!isListening) {
+        const processText = () => {
+            // If not listening or no transcript, clear displayed text
+            if (!isListening || !transcript) {
                 setDisplayedText('');
                 return;
             }
 
-            // Get the most recent text, prioritizing partial if it exists
-            const currentText = partialTranscript || transcript || '';
+            // Get the text from transcript
+            const currentText = transcript || '';
 
             // Don't update if the change was too recent (prevents flickering)
             const now = Date.now();
@@ -33,7 +33,7 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
             // Split into words and get the last few
             const words = currentText.trim().split(/\s+/);
 
-            // When using only partials, we show exactly 2 words for the TikTok-style
+            // Show only 2 words for TikTok-style captions
             const numWordsToShow = 2;
             let relevantWords = words.slice(-numWordsToShow).join(' ');
 
@@ -50,18 +50,18 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
             }
         };
 
-        extractLastWords();
-    }, [transcript, partialTranscript, isListening, showTranscript, displayedText]);
+        processText();
+    }, [transcript, isListening, showTranscript, displayedText]);
 
     // Auto-scroll to the bottom when transcript changes
     useEffect(() => {
         if (transcriptContainerRef.current) {
             transcriptContainerRef.current.scrollTop = transcriptContainerRef.current.scrollHeight;
         }
-    }, [transcript, partialTranscript]);
+    }, [transcript]);
 
-    // Completely hide component if not showing transcript
-    if (!showTranscript || !isListening) {
+    // Only hide if explicitly told not to show transcript
+    if (!showTranscript) {
         return null;
     }
 
@@ -85,7 +85,9 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
                         </div>
                     ) : (
                         <div className="text-center rounded-xl px-6 py-4">
-                            <p className="text-white text-4xl font-bold uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">LISTENING...</p>
+                            <p className="text-white text-4xl font-bold uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+                                {isListening ? "LOADING CAPTIONS..." : "WAITING FOR CAPTIONS..."}
+                            </p>
                         </div>
                     )}
                 </div>
@@ -94,4 +96,4 @@ const TranscriptionDisplay = memo(({ transcript, partialTranscript, isListening,
     );
 });
 
-export default TranscriptionDisplay; 
+export default TranscriptionDisplay;

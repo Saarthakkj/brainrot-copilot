@@ -13,13 +13,65 @@ document.body.appendChild(overlayContainer);
 const height = window.innerHeight * 0.7;
 const width = height * (9 / 19.5); // iPhone aspect ratio
 
+// Function to extract YouTube video ID from URL
+function getYouTubeVideoId() {
+    // Check if we're on a YouTube page
+    const isYouTubePage = window.location.hostname.includes('youtube.com');
+    if (!isYouTubePage) return null;
+    
+    // Extract video ID from URL
+    const url = new URL(window.location.href);
+    
+    // YouTube watch page
+    if (url.pathname === '/watch') {
+        return url.searchParams.get('v');
+    }
+    
+    // YouTube shortened URLs
+    if (url.pathname.startsWith('/shorts/')) {
+        return url.pathname.split('/')[2];
+    }
+    
+    // YouTube embed URLs
+    if (url.pathname.startsWith('/embed/')) {
+        return url.pathname.split('/')[2];
+    }
+    
+    return null;
+}
+
 // Main App component
 const App = () => {
-    const [audioLevelData, setAudioLevelData] = useState({
-        level: 0,
-        warning: false,
-        lastUpdateTime: null
-    });
+    const [isYouTubePage, setIsYouTubePage] = useState(false);
+    const [videoId, setVideoId] = useState(null);
+    
+    useEffect(() => {
+        // Check if we're on YouTube and get video ID
+        const youtubeVideoId = getYouTubeVideoId();
+        setIsYouTubePage(!!youtubeVideoId);
+        setVideoId(youtubeVideoId);
+        
+        // Watch for URL changes (for single-page YouTube app)
+        const handleUrlChange = () => {
+            const newVideoId = getYouTubeVideoId();
+            setIsYouTubePage(!!newVideoId);
+            setVideoId(newVideoId);
+        };
+        
+        window.addEventListener('popstate', handleUrlChange);
+        
+        // Additional listener for YouTube's navigation
+        const originalPushState = window.history.pushState;
+        window.history.pushState = function() {
+            originalPushState.apply(this, arguments);
+            handleUrlChange();
+        };
+        
+        return () => {
+            window.removeEventListener('popstate', handleUrlChange);
+            window.history.pushState = originalPushState;
+        };
+    }, []);
 
     useEffect(() => {
         // Add fullscreen event listeners
@@ -70,23 +122,6 @@ const App = () => {
             attributeFilter: ['class']
         });
 
-        // Monitor audio level updates
-        let audioMonitorInterval;
-        if (audioLevelData.lastUpdateTime) {
-            audioMonitorInterval = setInterval(() => {
-                const now = Date.now();
-                const timeSinceLastUpdate = now - audioLevelData.lastUpdateTime;
-
-                if (timeSinceLastUpdate > 3000) {
-                    setAudioLevelData(prev => ({
-                        ...prev,
-                        warning: true,
-                        level: Math.min(30, timeSinceLastUpdate / 100)
-                    }));
-                }
-            }, 1000);
-        }
-
         // Add custom styles for text shadow
         const style = document.createElement('style');
         style.textContent = `
@@ -110,17 +145,13 @@ const App = () => {
 
             observer.disconnect();
 
-            if (audioMonitorInterval) {
-                clearInterval(audioMonitorInterval);
-            }
-
             if (style && style.parentNode) {
                 style.parentNode.removeChild(style);
             }
         };
-    }, [audioLevelData.lastUpdateTime]);
+    }, []);
 
-    return <Overlay />;
+    return <Overlay isYouTubePage={isYouTubePage} videoId={videoId} />;
 };
 
 // Listen for messages from the service worker
@@ -134,26 +165,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true });
     } else if (message.type === 'ping') {
         sendResponse({ status: 'ok' });
-    } else if (message.type === 'audio-data') {
-        // Process audio data message from service worker
-        if (window.lastAudioDataTime) {
-            // Reset the no-audio warning if we're receiving data
-            window.lastAudioDataTime = Date.now();
-        }
-        sendResponse({ success: true });
-        return true;
-    } else if (message.type === 'audio-level') {
-        // Record the time we received an audio level update
-        if (!window.lastAudioDataTime) {
-            window.lastAudioDataTime = Date.now();
-        }
-
-        window.lastAudioDataTime = Date.now();
-
-        // This will be handled by the React component
-        if (window.updateAudioLevel) {
-            window.updateAudioLevel(message.level);
-        }
     }
     return true; // Keep the message channel open for async response
 });
@@ -170,13 +181,6 @@ function showOverlay() {
 
         // Create React root and render app component
         overlayRoot = createRoot(container);
-
-        // Function to update audio level from outside React
-        window.updateAudioLevel = (level) => {
-            const event = new CustomEvent('audioLevelUpdate', { detail: { level } });
-            window.dispatchEvent(event);
-        };
-
         overlayRoot.render(<App />);
     }
 }
@@ -186,4 +190,4 @@ function hideOverlay() {
         overlayRoot.unmount();
         overlayRoot = null;
     }
-} 
+}

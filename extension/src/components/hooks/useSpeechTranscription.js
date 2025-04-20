@@ -25,7 +25,7 @@ export const useSpeechTranscription = (apiKey) => {
     const lastAudioDataRef = useRef(null);
     const silenceCountRef = useRef(0);
 
-    // Function to reset the hide timeout
+    // Modified function to always keep captions visible
     const resetHideTimeout = (newContent) => {
         // Only reset if we have genuinely new content
         if (newContent && newContent === lastTranscriptRef.current) {
@@ -42,13 +42,13 @@ export const useSpeechTranscription = (apiKey) => {
             clearTimeout(timeoutRef.current);
         }
 
-        // Show the transcript
+        // Always show the transcript - remove timeout behavior
         setShowTranscript(true);
-
-        // Set a new timeout to hide it
-        timeoutRef.current = setTimeout(() => {
-            setShowTranscript(false);
-        }, TRANSCRIPT_HIDE_TIMEOUT);
+        
+        // No longer setting a timeout to hide captions
+        // timeoutRef.current = setTimeout(() => {
+        //     setShowTranscript(false);
+        // }, TRANSCRIPT_HIDE_TIMEOUT);
     };
 
     const fetchJWT = async (apiKey) => {
